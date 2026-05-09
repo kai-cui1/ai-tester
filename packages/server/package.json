@@ -1,0 +1,35 @@
+{
+  "name": "@ai-tester/server",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/app.js",
+  "types": "./dist/app.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/app.ts",
+    "start": "node dist/app.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@ai-tester/core": "workspace:*",
+    "@ai-tester/shared": "workspace:*",
+    "@ai-tester/ai": "workspace:*",
+    "@ai-tester/plugin-api": "workspace:*",
+    "fastify": "^5.0.0",
+    "@fastify/cors": "^10.0.0",
+    "@fastify/websocket": "^11.0.0",
+    "@fastify/swagger": "^9.0.0",
+    "@fastify/swagger-ui": "^5.0.0",
+    "fastify-type-provider-zod": "^4.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

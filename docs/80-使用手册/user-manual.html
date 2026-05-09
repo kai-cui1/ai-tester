@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Tester 使用手册</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --sidebar-width: 260px;
+      --primary: #6366f1;
+      --primary-light: #eef2ff;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--text); background: var(--bg); display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: #fff;
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 20px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-header p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .sidebar-nav { padding: 12px 0; flex: 1; }
+    .nav-group { margin-bottom: 4px; }
+    .nav-group-title {
+      padding: 8px 16px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px 8px 24px;
+      font-size: 13px;
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .nav-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-left-color: var(--primary);
+      font-weight: 600;
+    }
+    .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.6; }
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    /* Main Content */
+    .main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      min-width: 0;
+    }
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Typography */
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .section-subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 32px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary-light);
+      color: var(--text);
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      color: var(--text);
+    }
+    p { font-size: 14px; line-height: 1.8; margin-bottom: 12px; color: #334155; }
+    ul, ol { margin: 8px 0 16px 24px; }
+    li { font-size: 14px; line-height: 2; color: #334155; }
+
+    /* Flow Chart */
+    .flow-chart {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 20px 0 28px;
+    }
+    .flow-chart-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    /* Steps */
+    .step-list { margin: 20px 0; }
+    .step-item {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .step-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 17px;
+      top: 36px;
+      bottom: -12px;
+      width: 2px;
+      background: var(--primary-light);
+    }
+    .step-number {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-content h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .step-content p {
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 6px;
+    }
+
+    /* Tips/Notes */
+    .tip, .note, .warning {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin: 12px 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .tip { background: #f0fdf4; border-left: 3px solid var(--success); color: #166534; }
+    .note { background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; }
+    .warning { background: #fffbeb; border-left: 3px solid var(--warning); color: #92400e; }
+    .tip::before { content: '💡 提示：'; font-weight: 600; }
+    .note::before { content: 'ℹ️ 说明：'; font-weight: 600; }
+    .warning::before { content: '⚠️ 注意：'; font-weight: 600; }
+
+    /* UI Mockup */
+    .ui-mockup {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0 16px;
+      font-size: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .ui-mockup-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .mock-btn {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: #fff;
+      margin: 2px;
+    }
+    .mock-btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .mock-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .mock-table th, .mock-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .mock-table th { background: #f1f5f9; font-weight: 600; }
+    .mock-badge {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 9999px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .mock-badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .mock-badge-green { background: #dcfce7; color: #166534; }
+    .mock-badge-red { background: #fee2e2; color: #991b1b; }
+    .mock-badge-yellow { background: #fef3c7; color: #92400e; }
+    .mock-input {
+      display: inline-block;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+      min-width: 120px;
+    }
+    .mock-select {
+      display: inline-block;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+      background: #f8fafc;
+    }
+
+    /* Badge colors in text */
+    .method-get { color: #3b82f6; font-weight: 700; }
+    .method-post { color: #22c55e; font-weight: 700; }
+    .method-put { color: #f59e0b; font-weight: 700; }
+    .method-delete { color: #ef4444; font-weight: 700; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { width: 200px; }
+      .main { margin-left: 200px; }
+      :root { --sidebar-width: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      AI-Tester
+    </h1>
+    <p>API 自动化测试平台 · 使用手册</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-title">快速开始</div>
+      <a class="nav-item active" data-section="quickstart">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        平台简介
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">项目管理</div>
+      <a class="nav-item" data-section="projects">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        项目管理
+      </a>
+      <a class="nav-item" data-section="test-cases">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        测试用例
+      </a>
+      <a class="nav-item" data-section="suites">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        测试套件
+      </a>
+      <a class="nav-item" data-section="datasets">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        数据集
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">测试执行</div>
+      <a class="nav-item" data-section="runs">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        执行与结果
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">AI 能力</div>
+      <a class="nav-item" data-section="ai-settings">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        AI 设置
+      </a>
+      <a class="nav-item" data-section="knowledge">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        知识库
+      </a>
+      <a class="nav-item" data-section="ai-generate">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+        AI 用例生成
+      </a>
+    </div>
+  </nav>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+  <!-- ==================== 平台简介 ==================== -->
+  <div class="section active" id="sec-quickstart">
+    <div class="content">
+      <h1 class="section-title">AI-Tester 平台简介</h1>
+      <p class="section-subtitle">AI-Tester 是一个与 AI Coding Agent 配合使用的自动化 API 测试平台，帮助您快速构建、管理和执行 API 测试。</p>
+
+      <p style="margin:16px 0;"><img src="./screenshots/dashboard.png" alt="仪表盘" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+      <h2>核心能力</h2>
+      <ul>
+        <li><strong>项目管理</strong> — 以项目为维度组织测试资源，支持多环境配置</li>
+        <li><strong>测试用例编写</strong> — 可视化步骤编辑器，支持 HTTP 请求、断言、变量提取、子用例调用、数据集加载 5 种步骤类型</li>
+        <li><strong>测试套件</strong> — 将多个用例组织为套件，一键批量执行</li>
+        <li><strong>执行与结果</strong> — 实时查看执行状态、请求/响应详情、断言结果</li>
+        <li><strong>数据集</strong> — 管理测试数据，驱动数据驱动的测试场景</li>
+        <li><strong>AI 自动生成</strong> — 配置 LLM 后，基于 API 知识自动生成测试用例</li>
+      </ul>
+
+      <h2>典型使用流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph LR
+    A[创建项目] --> B[录入 API 知识]
+    B --> C{选择方式}
+    C -->|手动| D[手动添加端点]
+    C -->|导入| E[OpenAPI/cURL 导入]
+    C -->|AI| F[AI 解析文本]
+    D --> G[编写/AI 生成用例]
+    E --> G
+    F --> G
+    G --> H[组装测试套件]
+    H --> I[选择环境执行]
+    I --> J[查看执行结果]
+    J --> K{通过?}
+    K -->|是| L[✅ 完成]
+    K -->|否| M[❌ 定位问题]
+    M --> G
+        </pre>
+      </div>
+
+      <h2>系统访问</h2>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>启动服务</h4>
+            <p>在项目根目录执行 <code>pnpm dev</code>，等待所有子包构建完成。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>访问 Web 界面</h4>
+            <p>浏览器打开 <strong>http://localhost:5173</strong> 即可进入 AI-Tester 管理后台。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>API 端点</h4>
+            <p>后端 REST API 运行在 <strong>http://127.0.0.1:3100/api/v1</strong>，可直接通过 curl 或 Postman 调用。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 项目管理 ==================== -->
+  <div class="section" id="sec-projects">
+    <div class="content">
+      <h1 class="section-title">项目管理</h1>
+      <p class="section-subtitle">项目是 AI-Tester 的顶层容器，所有测试用例、套件、数据集和 AI 配置都归属于项目。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/projects.png" alt="项目列表" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph TD
+    A[进入项目页面] --> B[点击新建项目]
+    B --> C[填写名称和描述]
+    C --> D[创建成功]
+    D --> E[点击项目卡片选中]
+    E --> F[进入用例/套件等子页面]
+    A --> G[点击更多菜单]
+    G --> H[编辑项目]
+    G --> I[删除项目]
+        </pre>
+      </div>
+
+      <h2>操作步骤</h2>
+
+      <h3>创建项目</h3>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>进入项目页面</h4>
+            <p>点击左侧导航栏的「项目管理」，进入项目列表页。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>点击新建按钮</h4>
+            <p>点击页面右上角的「新建项目」按钮，弹出创建对话框。</p>
+            <p style="margin:12px 0;"><img src="./screenshots/project-create-dialog.png" alt="创建项目对话框" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>填写信息并创建</h4>
+            <p>输入项目名称（必填）和描述（选填），点击「创建」按钮完成创建。</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>选择当前项目</h3>
+      <p>在项目列表页，<strong>点击项目卡片</strong>即可将其设为当前项目（卡片会显示蓝色边框 + 对勾标记）。选中后，侧边栏的其他功能（用例、套件等）将基于该项目工作。</p>
+      <div class="note">切换项目后，用例、套件、数据集等页面会自动加载当前项目的数据。</div>
+
+      <h3>编辑/删除项目</h3>
+      <p>点击项目卡片右上角的「⋯」菜单，可选择「编辑」或「删除」。</p>
+      <div class="warning">删除项目会级联删除该项目下的所有用例、套件、数据集和 AI 配置，此操作不可撤销！</div>
+    </div>
+  </div>
+
+  <!-- ==================== 测试用例 ==================== -->
+  <div class="section" id="sec-test-cases">
+    <div class="content">
+      <h1 class="section-title">测试用例</h1>
+      <p class="section-subtitle">测试用例是 AI-Tester 的核心实体，由一组有序的原子步骤组成，每个步骤是一个不可分割的单一操作。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/test-cases.png" alt="测试用例列表" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph TD
+    A[选中项目] --> B[进入用例页面]
+    B --> C[点击新建用例]
+    C --> D[填写基本信息]
+    D --> E[添加测试步骤]
+    E --> F{步骤类型}
+    F -->|http| G[HTTP 请求]
+    F -->|assertion| H[断言验证]
+    F -->|extract| I[变量提取]
+    F -->|call| J[调用子用例]
+    F -->|load-dataset| K[加载数据集]
+    G --> L[保存用例]
+    H --> L
+    I --> L
+    J --> L
+    K --> L
+        </pre>
+      </div>
+
+      <p style="margin:12px 0;"><img src="./screenshots/test-case-dialog.png" alt="创建测试用例对话框" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+      <h2>用例基本信息</h2>
+      <ul>
+        <li><strong>名称</strong>（必填）：用例的标识名称</li>
+        <li><strong>模块</strong>：路径字符串（如 <code>user/auth</code>），用于树形组织，不是独立实体</li>
+        <li><strong>优先级</strong>：<span class="mock-badge mock-badge-red">critical</span> <span class="mock-badge mock-badge-yellow">high</span> <span class="mock-badge mock-badge-blue">medium</span> <span class="mock-badge" style="background:#f1f5f9;color:#64748b;">low</span></li>
+        <li><strong>标签</strong>：逗号分隔的字符串，用于横向分类过滤</li>
+      </ul>
+
+      <h2>五种步骤类型</h2>
+
+      <h3>1. HTTP 请求步骤</h3>
+      <p>发送一次 HTTP 请求，是最常用的步骤类型。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/http-step.png" alt="HTTP 步骤配置" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+      <ul>
+        <li><strong>请求方法</strong>：GET / POST / PUT / PATCH / DELETE / HEAD / OPTIONS</li>
+        <li><strong>URL</strong>：支持模板变量，如 <code>{{baseUrl}}/api/users/{{userId}}</code></li>
+        <li><strong>请求体</strong>：JSON 格式，支持模板变量</li>
+      </ul>
+      <div class="tip">URL 和 Body 中的 <code>{{variableName}}</code> 会在执行时从上下文变量中解析替换。</div>
+
+      <h3>2. 断言步骤</h3>
+      <p>对上一步 HTTP 响应或上下文变量执行断言验证。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/assertion-step.png" alt="断言步骤配置" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+      <ul>
+        <li><strong>断言来源</strong>：状态码 / 响应头 / 响应体 / JSONPath / 上下文变量</li>
+        <li><strong>操作符</strong>：等于、不等于、包含、不包含、大于、大于等于、小于、小于等于、正则匹配、存在、不存在、类型为</li>
+        <li>选择 JSONPath / 响应头 / 上下文变量 时，会显示「表达式」输入框</li>
+      </ul>
+
+      <h3>3. 变量提取步骤</h3>
+      <p>从 HTTP 响应中提取值存入上下文变量，供后续步骤使用。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/extract-step.png" alt="变量提取步骤配置" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+      <ul>
+        <li><strong>提取来源</strong>：完整响应体 / JSONPath / 响应头 / 状态码 / 正则表达式</li>
+        <li>提取的变量可在后续步骤中通过 <code>{{variableName}}</code> 引用</li>
+      </ul>
+
+      <h3>4. 子用例调用步骤</h3>
+      <p>调用另一个测试用例，被调用用例与调用方共享执行上下文。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/call-step.png" alt="子用例调用步骤配置" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+      <div class="note">被调用用例与调用方共享同一个 RunContext，变量双向可见。</div>
+
+      <h3>5. 加载数据集步骤</h3>
+      <p>将数据集加载到上下文变量中，用于数据驱动测试。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/dataset-step.png" alt="加载数据集步骤配置" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+      <p>加载后通过 <code>{{variableName}}</code> 访问行数组，通过 <code>{{variableName[0].field}}</code> 访问具体字段。</p>
+
+      <h2>通用步骤选项</h2>
+      <p>每个步骤都有以下通用选项：</p>
+      <ul>
+        <li><strong>失败后继续</strong>：开关，控制该步骤失败后是否继续执行后续步骤</li>
+        <li><strong>重试次数</strong>：0~3 次，步骤失败后自动重试</li>
+      </ul>
+
+      <h2>步骤视图切换</h2>
+      <p>用例编辑器提供两种视图模式：</p>
+      <ul>
+        <li><strong>表单视图</strong>：逐步骤表单编辑，适合精细配置</li>
+        <li><strong>流水线视图</strong>：可视化流程图，适合查看整体流程</li>
+      </ul>
+
+      <h2>用例操作</h2>
+      <ul>
+        <li><strong>克隆</strong>：复制一个完全相同的用例</li>
+        <li><strong>搜索</strong>：支持按名称搜索用例</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== 测试套件 ==================== -->
+  <div class="section" id="sec-suites">
+    <div class="content">
+      <h1 class="section-title">测试套件</h1>
+      <p class="section-subtitle">测试套件是多个用例的有序集合，是执行测试的基本单位。一次运行等于执行一个套件。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/suites.png" alt="测试套件列表" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph TD
+    A[创建测试用例] --> B[进入套件页面]
+    B --> C[新建套件]
+    C --> D[选择包含的用例]
+    D --> E[选择环境]
+    E --> F[保存套件]
+    F --> G[点击运行]
+    G --> H[选择执行环境]
+    H --> I[触发执行]
+    I --> J[查看运行结果]
+        </pre>
+      </div>
+
+      <h2>操作步骤</h2>
+
+      <h3>创建套件</h3>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>点击新建套件</h4>
+            <p>在套件页面点击右上角「新建套件」按钮。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>填写套件信息</h4>
+            <p style="margin:12px 0;"><img src="./screenshots/suite-dialog.png" alt="套件编辑对话框" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>选择用例并保存</h4>
+            <p>勾选需要包含的用例（支持多选），点击「创建」保存套件。</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>执行套件</h3>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>点击运行</h4>
+            <p>在套件列表中，点击某行的「⋯」菜单，选择「运行」。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>选择执行环境</h4>
+            <p>在弹出的对话框中选择目标环境（如 dev / staging / prod），点击「运行」触发执行。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>查看结果</h4>
+            <p>执行触发后会自动跳转到运行详情页面，可实时查看执行进度和结果。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 数据集 ==================== -->
+  <div class="section" id="sec-datasets">
+    <div class="content">
+      <h1 class="section-title">数据集</h1>
+      <p class="section-subtitle">数据集用于管理测试数据，可在用例中通过 load-dataset 步骤加载，实现数据驱动测试。</p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph LR
+    A[进入数据集页面] --> B[新建数据集]
+    B --> C[定义字段和数据行]
+    C --> D[保存数据集]
+    D --> E[在用例中引用]
+    E --> F[load-dataset 步骤加载]
+        </pre>
+      </div>
+
+      <h2>操作步骤</h2>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>新建数据集</h4>
+            <p>点击「新建数据集」按钮，弹出创建对话框。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>填写名称和描述</h4>
+            <p>输入数据集名称（如"用户测试数据"）和描述。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>编辑数据内容</h4>
+            <p>以 JSON 格式定义字段定义（fields）和数据行（rows）：</p>
+            <p style="margin:12px 0;"><img src="./screenshots/dataset-dialog.png" alt="数据集编辑对话框" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+            <ul>
+              <li><strong>fields</strong>：字段定义数组，每个字段包含 name 和 type</li>
+              <li><strong>type</strong> 可选值：string / number / boolean / email / uuid / date / custom</li>
+              <li><strong>rows</strong>：数据行数组，每行是一个键值对对象</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>保存数据集</h4>
+            <p>确认 JSON 格式正确后，点击「创建」保存。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip">在测试用例中，通过添加「加载数据集」步骤并指定变量名，即可在后续步骤中通过 <code>{{变量名[0].字段名}}</code> 访问数据。</div>
+    </div>
+  </div>
+
+  <!-- ==================== 执行与结果 ==================== -->
+  <div class="section" id="sec-runs">
+    <div class="content">
+      <h1 class="section-title">执行与结果</h1>
+      <p class="section-subtitle">测试执行是验证 API 正确性的核心环节。AI-Tester 支持一键触发套件执行，并详细记录每个步骤的执行过程。</p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph TD
+    A[在套件页面触发运行] --> B[选择执行环境]
+    B --> C[系统创建 TestRun]
+    C --> D[依次执行套件中的用例]
+    D --> E[每个用例依次执行步骤]
+    E --> F[记录每步的请求/响应/断言/提取]
+    F --> G[汇总结果]
+    G --> H[查看运行列表]
+    H --> I[点击进入运行详情]
+    I --> J[查看用例结果]
+    J --> K[展开查看步骤详情]
+        </pre>
+      </div>
+
+      <h2>运行列表</h2>
+      <p>运行列表页面展示所有历史执行记录，包含以下信息：</p>
+      <p style="margin:12px 0;"><img src="./screenshots/runs.png" alt="运行列表" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+
+      <h2>运行详情</h2>
+      <p>点击某条运行记录可进入详情页，查看完整的执行信息：</p>
+      <ul>
+        <li><strong>摘要卡片</strong>：总用例数、通过数、失败数、通过率</li>
+        <li><strong>元信息</strong>：环境、触发方式、耗时、开始时间</li>
+        <li><strong>用例结果列表</strong>：每个用例的通过/失败状态</li>
+      </ul>
+
+      <h3>步骤结果详情</h3>
+      <p>展开用例结果后，可查看每个步骤的详细信息，通过标签页切换：</p>
+      <ul>
+        <li><strong>概览</strong>：步骤类型、状态、耗时、提取的变量</li>
+        <li><strong>请求</strong>（HTTP 步骤）：完整请求信息（method / url / headers / body）</li>
+        <li><strong>响应</strong>（HTTP 步骤）：响应状态码、耗时、响应体</li>
+        <li><strong>断言</strong>（断言步骤）：操作符、期望值、实际值、是否通过</li>
+        <li><strong>错误</strong>（失败步骤）：错误信息和堆栈</li>
+      </ul>
+      <div class="tip">失败用例默认展开步骤详情，方便快速定位问题。</div>
+    </div>
+  </div>
+
+  <!-- ==================== AI 设置 ==================== -->
+  <div class="section" id="sec-ai-settings">
+    <div class="content">
+      <h1 class="section-title">AI 设置</h1>
+      <p class="section-subtitle">配置 LLM 服务提供商和 API Key，这是使用 AI 功能（知识解析、用例生成）的前提。</p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph LR
+    A[进入 AI 设置页] --> B[选择 Provider]
+    B --> C[输入 Model 名称]
+    C --> D[输入 API Key]
+    D --> E[配置参数]
+    E --> F[保存配置]
+    F --> G[测试连接]
+    G --> H{连接成功?}
+    H -->|是| I[✅ 可使用 AI 功能]
+    H -->|否| J[检查配置后重试]
+        </pre>
+      </div>
+
+      <h2>操作步骤</h2>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>选择 Provider</h4>
+            <p>从下拉菜单选择 LLM 提供商：</p>
+            <ul>
+              <li><strong>OpenAI</strong>：支持 gpt-4o、gpt-4o-mini 等模型</li>
+              <li><strong>Anthropic</strong>：支持 claude-sonnet-4 等模型（预留）</li>
+              <li><strong>Custom</strong>：兼容 OpenAI API 格式的自定义端点（如 Ollama、vLLM）</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>输入 Model 和 API Key</h4>
+            <p>Model 输入框支持预设建议（如 gpt-4o），也可手动输入。API Key 以密码形式输入，保存后加密存储。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>配置参数（选填）</h4>
+            <ul>
+              <li><strong>Base URL</strong>：仅 Custom 模式需要，填写兼容端点地址</li>
+              <li><strong>Temperature</strong>：0~2，控制输出随机性（默认 0.7）</li>
+              <li><strong>Max Tokens</strong>：100~128000，控制最大输出长度（默认 4096）</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>保存并测试</h4>
+            <p>点击「保存」后，可点击「测试连接」按钮验证 LLM 服务是否可用。连接成功后即可使用 AI 知识解析和用例生成功能。</p>
+          </div>
+        </div>
+      </div>
+      <p style="margin:16px 0;"><img src="./screenshots/ai-settings.png" alt="AI 设置页面" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+      <div class="warning">API Key 使用 AES-256-GCM 加密存储在数据库中，确保密钥安全。</div>
+    </div>
+  </div>
+
+  <!-- ==================== 知识库 ==================== -->
+  <div class="section" id="sec-knowledge">
+    <div class="content">
+      <h1 class="section-title">知识库</h1>
+      <p class="section-subtitle">知识库管理被测系统的 API 端点信息，是 AI 生成测试用例的知识基础。支持 4 种方式录入端点。</p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph TD
+    A[进入知识库页面] --> B{选择录入方式}
+    B -->|手动| C[点击添加端点]
+    B -->|OpenAPI| D[点击导入 OpenAPI]
+    B -->|cURL| E[点击解析 cURL]
+    B -->|AI 文本| F[点击 AI 解析文本]
+    C --> G[填写端点信息]
+    D --> H[粘贴 OpenAPI 文档]
+    E --> I[粘贴 cURL 命令]
+    F --> J[输入自由文本描述]
+    G --> K[保存到知识库]
+    H --> K
+    I --> K
+    J --> L[AI 解析预览]
+    L --> M[勾选确认]
+    M --> K
+        </pre>
+      </div>
+
+      <h2>4 种录入方式</h2>
+
+      <h3>1. 手动添加端点</h3>
+      <p>适合少量端点的精确录入。点击「添加端点」按钮，在对话框中填写：</p>
+      <p style="margin:12px 0;"><img src="./screenshots/knowledge.png" alt="知识库页面" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+
+      <h3>2. 导入 OpenAPI 文档</h3>
+      <p>适合已有 OpenAPI/Swagger 文档的项目。点击「导入 OpenAPI」，粘贴 JSON/YAML 格式的文档内容，系统自动解析并批量创建端点。</p>
+      <div class="note">支持 OpenAPI 3.x 和 Swagger 2.0 格式。</div>
+
+      <h3>3. 解析 cURL 命令</h3>
+      <p>适合从浏览器开发者工具复制的请求。点击「解析 cURL」，粘贴 cURL 命令，系统自动解析出请求方法、URL、Headers 等信息。</p>
+
+      <h3>4. AI 解析文本</h3>
+      <p>适合没有 API 文档的场景。用自然语言描述你的 API，AI 会自动解析为结构化端点。</p>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>输入描述文本</h4>
+            <p>例如："我的用户服务有注册接口 POST /api/register，登录接口 POST /api/login，获取用户信息 GET /api/users/:id，需要 Bearer Token 认证"</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>AI 解析预览</h4>
+            <p>系统调用 LLM 解析，返回端点列表预览，每个端点显示方法、路径和摘要。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>勾选并添加</h4>
+            <p>勾选需要的端点，点击「添加选中项」入库。</p>
+          </div>
+        </div>
+      </div>
+      <div class="tip">AI 解析文本功能需要先在 AI 设置中配置好 LLM 服务。</div>
+
+      <h2>知识库表格</h2>
+      <p>所有端点以表格形式展示，包含以下列：</p>
+      <ul>
+        <li><strong>方法</strong>：彩色标签（<span class="method-get">GET</span> <span class="method-post">POST</span> <span class="method-put">PUT</span> <span class="method-delete">DELETE</span>）</li>
+        <li><strong>路径</strong>：API 路径</li>
+        <li><strong>摘要</strong>：接口说明</li>
+        <li><strong>认证</strong>：认证方式</li>
+        <li><strong>来源</strong>：manual / openapi / curl / text</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== AI 用例生成 ==================== -->
+  <div class="section" id="sec-ai-generate">
+    <div class="content">
+      <h1 class="section-title">AI 用例生成</h1>
+      <p class="section-subtitle">基于知识库中的 API 端点，利用 AI 自动生成结构化的测试用例，审核确认后直接入库。</p>
+      <p style="margin:12px 0;"><img src="./screenshots/ai-generate.png" alt="AI 用例生成页面" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph TD
+    A[进入 AI 用例生成页] --> B[Step 1: 选择端点]
+    B --> C[勾选知识库中的端点]
+    C --> D[Step 2: 选择策略]
+    D --> E{选择生成策略}
+    E -->|happy_path| F[正向用例]
+    E -->|error_cases| G[异常用例]
+    E -->|auth_cases| H[认证用例]
+    E -->|comprehensive| I[综合用例]
+    F --> J[可选：自定义 Prompt]
+    G --> J
+    H --> J
+    I --> J
+    J --> K[点击生成]
+    K --> L[Step 3: 审核确认]
+    L --> M[预览 AI 生成的用例]
+    M --> N[勾选需要的用例]
+    N --> O[确认入库]
+    O --> P[✅ 用例已创建]
+        </pre>
+      </div>
+
+      <h2>3 步向导</h2>
+
+      <h3>Step 1 — 选择端点</h3>
+      <p>从知识库中选择要生成用例的 API 端点。支持全选/取消全选，每个端点显示方法标签、路径和摘要。</p>
+      <div class="ui-mockup">
+        <div style="border:1px solid var(--primary);border-radius:4px;padding:8px;margin-bottom:4px;background:var(--primary-light);">
+          <input type="checkbox" checked> <span class="mock-badge mock-badge-blue">POST</span> <code style="font-size:11px;">/api/auth/login</code> <span style="color:var(--text-muted);font-size:11px;float:right;">用户登录</span>
+        </div>
+        <div style="border:1px solid var(--primary);border-radius:4px;padding:8px;margin-bottom:4px;background:var(--primary-light);">
+          <input type="checkbox" checked> <span class="mock-badge" style="background:#dbeafe;color:#1d4ed8;">GET</span> <code style="font-size:11px;">/api/users/:id</code> <span style="color:var(--text-muted);font-size:11px;float:right;">获取用户信息</span>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:4px;padding:8px;">
+          <input type="checkbox"> <span class="mock-badge mock-badge-red">DELETE</span> <code style="font-size:11px;">/api/users/:id</code> <span style="color:var(--text-muted);font-size:11px;float:right;">删除用户</span>
+        </div>
+        <div style="text-align:right;margin-top:8px;">已选 2 个端点</div>
+      </div>
+
+      <h3>Step 2 — 选择策略</h3>
+      <p>选择用例生成策略，不同策略关注的测试角度不同：</p>
+      <div class="ui-mockup">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="border:1px solid var(--border);border-radius:6px;padding:12px;">
+            <strong style="font-size:12px;">正向用例</strong>
+            <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0;">验证 API 正常功能路径</p>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:6px;padding:12px;">
+            <strong style="font-size:12px;">异常用例</strong>
+            <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0;">测试错误输入和边界情况</p>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:6px;padding:12px;">
+            <strong style="font-size:12px;">认证用例</strong>
+            <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0;">测试认证和授权场景</p>
+          </div>
+          <div style="border:1px solid var(--primary);border-radius:6px;padding:12px;background:var(--primary-light);">
+            <strong style="font-size:12px;color:var(--primary);">综合用例</strong>
+            <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0;">覆盖以上所有场景</p>
+          </div>
+        </div>
+      </div>
+      <p>还可选填<strong>自定义 Prompt</strong>，给 AI 额外的生成指令（如"重点关注分页参数的边界值"）。</p>
+
+      <h3>Step 3 — 审核确认</h3>
+      <p>AI 生成完成后，展示预览列表。每个用例卡片显示：</p>
+      <ul>
+        <li>用例名称、优先级、标签</li>
+        <li>AI 推理说明（reasoning）</li>
+        <li>展开可查看具体步骤列表</li>
+      </ul>
+      <div class="ui-mockup">
+        <div style="border:1px solid var(--primary);border-radius:4px;padding:10px;background:var(--primary-light);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" checked>
+            <strong style="font-size:12px;">登录接口 - 正常登录</strong>
+            <span class="mock-badge mock-badge-yellow">high</span>
+            <span class="mock-badge" style="background:#f1f5f9;">auth</span>
+            <span style="margin-left:auto;font-size:11px;color:var(--primary);cursor:pointer;">3 steps ▾</span>
+          </div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:6px;font-style:italic;">验证使用正确的用户名和密码可以成功登录</p>
+        </div>
+      </div>
+      <p>勾选需要的用例后，点击「确认选中项」入库。入库后可在测试用例页面查看和编辑。</p>
+
+      <div class="tip">生成的用例是预览状态，不会直接入库。只有经过你审核确认后才会创建为正式用例。</div>
+      <div class="warning">AI 生成需要消耗 LLM API Token，请关注 Token 用量。生成耗时可能较长（30~120 秒），请耐心等待。</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Initialize Mermaid (do NOT auto-render on load)
+  mermaid.initialize({ startOnLoad: false, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' } });
+
+  /**
+   * Render mermaid diagrams inside a given container.
+   * Skips elements that have already been rendered.
+   */
+  async function renderMermaidIn(container) {
+    const nodes = Array.from(container.querySelectorAll('.mermaid')).filter(el => !el.getAttribute('data-processed'));
+    if (nodes.length === 0) return;
+    await mermaid.run({ nodes });
+  }
+
+  // Navigation
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      // Remove active from all
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+      // Add active to clicked
+      item.classList.add('active');
+      const sectionId = 'sec-' + item.dataset.section;
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.classList.add('active');
+        // Render mermaid diagrams in the newly visible section
+        renderMermaidIn(section);
+      }
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    });
+  });
+
+  // On initial load, render only the active section's mermaid diagrams
+  window.addEventListener('DOMContentLoaded', () => {
+    const activeSection = document.querySelector('.section.active');
+    if (activeSection) {
+      renderMermaidIn(activeSection);
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id           String   @id
+  name         String
+  description  String?
+  environments String   @default("[]") // JSON array of Environment objects
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  testCases TestCase[]
+  testSuites TestSuite[]
+  testDataSets TestDataSet[]
+  activeModelId   String?
+  aiModels        AiModel[]
+  apiEndpoints    ApiEndpoint[]
+  generationTasks GenerationTask[]
+}
+
+model TestCase {
+  id          String   @id
+  projectId   String
+  name        String
+  description String?
+  module      String   @default("")
+  tags        String   @default("[]") // JSON array of strings
+  priority    String   @default("medium")
+  steps       String   @default("[]") // JSON array of TestStep objects
+  variables   String   @default("{}") // JSON Record<string, string>
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([module])
+}
+
+model TestSuite {
+  id             String   @id
+  projectId      String
+  name           String
+  description    String?
+  testCaseIds    String   @default("[]") // JSON array of case IDs
+  parallelism    Int      @default(1)
+  environment    String?
+  variables      String   @default("{}") // JSON Record<string, string>
+  setupCaseId    String?
+  teardownCaseId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  testRuns TestRun[]
+
+  @@index([projectId])
+}
+
+model TestRun {
+  id          String   @id
+  suiteId     String
+  status      String   @default("pending")
+  environment String
+  variables   String   @default("{}") // JSON
+  startedAt   DateTime @default(now())
+  finishedAt  DateTime?
+  durationMs  Int?
+  totalCases  Int      @default(0)
+  passedCases Int      @default(0)
+  failedCases Int      @default(0)
+  triggeredBy String   @default("manual")
+  createdAt   DateTime @default(now())
+
+  suite       TestSuite        @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  caseResults TestCaseResult[]
+
+  @@index([suiteId])
+  @@index([status])
+}
+
+model TestCaseResult {
+  id           String   @id
+  runId        String
+  testCaseId   String
+  testCaseName String
+  status       String   @default("skipped")
+  startedAt    DateTime @default(now())
+  finishedAt   DateTime?
+  durationMs   Int?
+  totalSteps   Int      @default(0)
+  passedSteps  Int      @default(0)
+  failedSteps  Int      @default(0)
+
+  run         TestRun          @relation(fields: [runId], references: [id], onDelete: Cascade)
+  stepResults TestStepResult[]
+
+  @@index([runId])
+}
+
+model TestStepResult {
+  id           String  @id
+  caseResultId String
+  stepId       String
+  stepName     String
+  stepType     String
+  status       String  @default("skipped")
+  request      String? // JSON
+  response     String? // JSON
+  assertion    String? // JSON
+  extractedVar String? // JSON
+  error        String? // JSON
+  durationMs   Int     @default(0)
+
+  caseResult TestCaseResult @relation(fields: [caseResultId], references: [id], onDelete: Cascade)
+
+  @@index([caseResultId])
+}
+
+model TestDataSet {
+  id          String   @id
+  projectId   String
+  name        String
+  description String?
+  fields      String   @default("[]") // JSON array of DataField
+  rows        String   @default("[]") // JSON array of rows
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model AiModel {
+  id          String   @id
+  projectId   String
+  name        String               // User-defined display name, e.g. "GPT-4o"
+  provider    String               // "openai" | "anthropic" | "custom"
+  apiFormat   String   @default("openai") // "openai" | "anthropic"
+  model       String               // "gpt-4o", "claude-sonnet-4-20250514" etc.
+  apiKey      String               // AES-256-GCM encrypted
+  baseUrl     String?              // Custom endpoint
+  temperature Float    @default(0.7)
+  maxTokens   Int      @default(4096)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ApiEndpoint {
+  id             String   @id
+  projectId      String
+  method         String               // GET/POST/PUT/PATCH/DELETE
+  path           String               // "/api/users/:id"
+  summary        String
+  description    String?
+  tags           String   @default("[]")   // JSON
+  parameters     String   @default("[]")   // JSON: [{name, in, type, required, description}]
+  requestBody    String?                    // JSON schema description
+  responseBody   String?                    // JSON schema description
+  authentication String?                    // "bearer" | "api-key" | "basic" | "none"
+  source         String   @default("manual") // "manual" | "openapi" | "curl" | "text"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model AiProviderConfig {
+  id          String   @id
+  name        String               // Display name, e.g. "OpenAI"
+  key         String   @unique      // Unique identifier, e.g. "openai"
+  baseUrl     String?              // Default base URL
+  apiFormat   String   @default("openai") // "openai" | "anthropic"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GenerationTask {
+  id               String    @id
+  projectId        String
+  endpointIds      String    @default("[]")   // JSON
+  strategy         String                      // "happy_path" | "error_cases" | "auth_cases" | "comprehensive"
+  status           String    @default("pending") // pending | running | completed | failed
+  generatedCases   String    @default("[]")   // JSON: CreateTestCase[] preview
+  confirmedCaseIds String    @default("[]")   // JSON: confirmed TestCase IDs
+  error            String?
+  tokenUsage       String?                    // JSON: {prompt, completion, total}
+  durationMs       Int?
+  createdAt        DateTime  @default(now())
+  completedAt      DateTime?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+}
