@@ -1,9 +1,13 @@
 const BASE = "/api/v1";
+const API_KEY = import.meta.env.VITE_API_KEY || "";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {};
   if (init?.body) {
     headers["Content-Type"] = "application/json";
+  }
+  if (API_KEY) {
+    headers["X-API-Key"] = API_KEY;
   }
   const res = await fetch(`${BASE}${path}`, {
     headers: { ...headers, ...init?.headers },
@@ -154,7 +158,9 @@ export const projects = {
 export const testCases = {
   list: (projectId: string, params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-    return fetch(`${BASE}/projects/${projectId}/test-cases${qs}`)
+    const headers: Record<string, string> = {};
+    if (API_KEY) headers["X-API-Key"] = API_KEY;
+    return fetch(`${BASE}/projects/${projectId}/test-cases${qs}`, { headers })
       .then((r) => r.json())
       .then((j) => ({ data: j.data, meta: j.meta }) as Paginated<TestCase>);
   },
@@ -183,7 +189,9 @@ export const suites = {
 export const runs = {
   list: (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-    return fetch(`${BASE}/runs${qs}`)
+    const headers: Record<string, string> = {};
+    if (API_KEY) headers["X-API-Key"] = API_KEY;
+    return fetch(`${BASE}/runs${qs}`, { headers })
       .then((r) => r.json())
       .then((j) => ({ data: j.data, meta: j.meta }) as Paginated<TestRun>);
   },

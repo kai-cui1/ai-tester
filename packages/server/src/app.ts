@@ -20,6 +20,7 @@ import { aiModelRoutes } from './routes/ai-models.js';
 import { aiProviderConfigRoutes } from './routes/ai-provider-configs.js';
 import { aiEndpointRoutes } from './routes/ai-endpoints.js';
 import { aiGenerationRoutes } from './routes/ai-generation.js';
+import { registerAuthHook } from './middleware/auth.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -30,6 +31,9 @@ export async function buildApp() {
 
   // CORS
   await app.register(cors, { origin: true });
+
+  // Auth hook (skips /health)
+  registerAuthHook(app);
 
   // Global error handler
   app.setErrorHandler((error, _request, reply) => {
