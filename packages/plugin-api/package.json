@@ -22,6 +22,7 @@
     "@ai-tester/core": "workspace:*",
     "@ai-tester/shared": "workspace:*",
     "jsonpath-plus": "^9.0.0",
+    "playwright": "^1.59.1",
     "undici": "^7.0.0"
   },
   "devDependencies": {

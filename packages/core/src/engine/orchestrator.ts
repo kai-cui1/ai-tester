@@ -1,5 +1,5 @@
 import { generateId } from '@ai-tester/shared';
-import type { TestCase, TestSuite, TestRun, TestCaseResult, TestStepResult } from '../models/index.js';
+import type { TestCase, TestSuite, TestRun, TestCaseResult, TestStepResult, TestStep } from '../models/index.js';
 import type { StepExecutionResult } from '../plugins/executor.js';
 import { PluginRegistry } from '../plugins/registry.js';
 import { RunContext } from './run-context.js';
@@ -82,7 +82,13 @@ export class Orchestrator {
 
         context.eventEmitter.emit('case:start', { caseResultId: caseResult.id, testCaseName: testCase.name });
 
+        // Setup browser if test case has browser steps
+        await this.setupBrowserIfNeeded(testCase.steps, context);
+
         const stepResults = await this.executeCaseSteps(testCase.id, context, 0);
+
+        // Teardown browser after case completes
+        await this.teardownBrowserIfNeeded(context);
 
         const passed = stepResults.filter((r) => r.status === 'passed').length;
         const failed = stepResults.filter((r) => r.status === 'failed' || r.status === 'error').length;
@@ -277,6 +283,7 @@ export class Orchestrator {
         assertion: lastResult!.assertion,
         extractedVar: lastResult!.extractedVar,
         error: lastResult!.error,
+        browser: lastResult!.browser,
         durationMs: lastResult!.durationMs,
       };
 
@@ -291,5 +298,24 @@ export class Orchestrator {
     }
 
     return results;
+  }
+
+  private async setupBrowserIfNeeded(steps: TestStep[], context: RunContext): Promise<void> {
+    const hasBrowserSteps = steps.some((s) => s.type === 'browser');
+    if (hasBrowserSteps) {
+      const browserExecutor = this.deps.registry.get('browser');
+      if (browserExecutor?.setup) {
+        await browserExecutor.setup(context);
+      }
+    }
+  }
+
+  private async teardownBrowserIfNeeded(context: RunContext): Promise<void> {
+    if (context.browserPage) {
+      const browserExecutor = this.deps.registry.get('browser');
+      if (browserExecutor?.teardown) {
+        await browserExecutor.teardown(context);
+      }
+    }
   }
 }

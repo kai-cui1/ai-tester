@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // --- Step Types ---
 
-export const StepType = z.enum(['http', 'assertion', 'extract', 'call', 'load-dataset']);
+export const StepType = z.enum(['http', 'assertion', 'extract', 'call', 'load-dataset', 'browser']);
 export type StepType = z.infer<typeof StepType>;
 
 // --- Step Config Schemas ---
@@ -59,6 +59,78 @@ export const LoadDatasetStepConfigSchema = z.object({
   variableName: z.string().min(1),
 });
 
+// --- Browser Step Config Schemas ---
+
+export const BrowserAction = z.enum([
+  'navigate',
+  'click',
+  'fill',
+  'select',
+  'check',
+  'uncheck',
+  'hover',
+  'wait',
+  'screenshot',
+  'assert',
+  'extract',
+  'keyboard',
+  'goBack',
+  'goForward',
+  'close',
+]);
+
+export const BrowserAssertionType = z.enum([
+  'text',
+  'value',
+  'visible',
+  'hidden',
+  'url',
+  'title',
+  'attribute',
+  'count',
+]);
+
+export const BrowserAssertionOperator = z.enum(['equals', 'contains', 'matches']);
+
+export const BrowserAssertionSchema = z.object({
+  type: BrowserAssertionType,
+  selector: z.string().optional(),
+  expected: z.any().optional(),
+  operator: BrowserAssertionOperator.default('equals'),
+  attribute: z.string().optional(),
+});
+
+export const BrowserStepConfigSchema = z.object({
+  action: BrowserAction,
+  // navigate
+  url: z.string().optional(),
+  waitUntil: z.enum(['load', 'domcontentloaded', 'networkidle']).optional(),
+  // selector-based actions
+  selector: z.string().optional(),
+  // fill / select
+  value: z.string().optional(),
+  // fill options
+  clear: z.boolean().default(true).optional(),
+  // click options
+  button: z.enum(['left', 'right', 'middle']).default('left').optional(),
+  clickCount: z.number().int().min(1).default(1).optional(),
+  force: z.boolean().default(false).optional(),
+  // wait options
+  state: z.enum(['visible', 'hidden', 'attached', 'detached']).optional(),
+  duration: z.number().positive().optional(),
+  // screenshot options
+  fullPage: z.boolean().default(false).optional(),
+  // extract options
+  variableName: z.string().optional(),
+  attribute: z.string().optional(),
+  // assert
+  assertion: BrowserAssertionSchema.optional(),
+  // keyboard
+  key: z.string().optional(),
+  // global
+  timeout: z.number().positive().default(30000).optional(),
+});
+
 // --- Union config schema for validation dispatch ---
 
 export const StepConfigSchema = z.union([
@@ -67,6 +139,7 @@ export const StepConfigSchema = z.union([
   ExtractStepConfigSchema,
   CallStepConfigSchema,
   LoadDatasetStepConfigSchema,
+  BrowserStepConfigSchema,
 ]);
 
 // --- TestStep ---
@@ -97,5 +170,7 @@ export type AssertionStepConfig = z.infer<typeof AssertionStepConfigSchema>;
 export type ExtractStepConfig = z.infer<typeof ExtractStepConfigSchema>;
 export type CallStepConfig = z.infer<typeof CallStepConfigSchema>;
 export type LoadDatasetStepConfig = z.infer<typeof LoadDatasetStepConfigSchema>;
+export type BrowserStepConfig = z.infer<typeof BrowserStepConfigSchema>;
+export type BrowserAssertion = z.infer<typeof BrowserAssertionSchema>;
 export type TestStep = z.infer<typeof TestStepSchema>;
 export type CreateTestStep = z.infer<typeof CreateTestStepSchema>;

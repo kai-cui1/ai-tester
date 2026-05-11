@@ -57,6 +57,7 @@ function toStepResult(row: any): TestStepResult {
     assertion: row.assertion ? JSON.parse(row.assertion) : undefined,
     extractedVar: row.extractedVar ? JSON.parse(row.extractedVar) : undefined,
     error: row.error ? JSON.parse(row.error) : undefined,
+    browser: row.browser ? JSON.parse(row.browser) : undefined,
     durationMs: row.durationMs,
   };
 }
@@ -185,6 +186,7 @@ export class PrismaTestRunRepository implements TestRunRepository {
           ? JSON.stringify(stepResult.extractedVar)
           : null,
         error: stepResult.error ? JSON.stringify(stepResult.error) : null,
+        browser: stepResult.browser ? JSON.stringify(stepResult.browser) : null,
         durationMs: stepResult.durationMs,
       },
     });

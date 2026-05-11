@@ -10,6 +10,20 @@ export interface StepExecutionResult {
   extractedVar?: { variableName: string; value: any };
   error?: { message: string; stack?: string };
   durationMs: number;
+  browser?: {
+    action: string;
+    url?: string;
+    title?: string;
+    screenshot?: string;
+    assertion?: {
+      type: string;
+      selector?: string;
+      operator: string;
+      expected?: any;
+      actual?: any;
+      passed: boolean;
+    };
+  };
 }
 
 export interface Executor {

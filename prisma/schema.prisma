@@ -117,6 +117,7 @@ model TestStepResult {
   assertion    String? // JSON
   extractedVar String? // JSON
   error        String? // JSON
+  browser      String? // JSON (browser action result: action, url, title, screenshot, assertion)
   durationMs   Int     @default(0)
 
   caseResult TestCaseResult @relation(fields: [caseResultId], references: [id], onDelete: Cascade)

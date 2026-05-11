@@ -14,6 +14,9 @@ export class RunContext {
   public readonly variables: Map<string, any>;
   public readonly eventEmitter: EventEmitter;
   public lastResponse?: HttpResponse;
+  // Browser testing context (shared within a test case)
+  public browserPage?: any; // Playwright Page object
+  public screenshots: string[] = [];
 
   constructor(
     runId: string,

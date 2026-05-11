@@ -54,6 +54,25 @@ export const TestStepResultSchema = z.object({
       stack: z.string().optional(),
     })
     .optional(),
+  // Browser step specific
+  browser: z
+    .object({
+      action: z.string(),
+      url: z.string().optional(),
+      title: z.string().optional(),
+      screenshot: z.string().optional(),
+      assertion: z
+        .object({
+          type: z.string(),
+          selector: z.string().optional(),
+          operator: z.string(),
+          expected: z.any().optional(),
+          actual: z.any().optional(),
+          passed: z.boolean(),
+        })
+        .optional(),
+    })
+    .optional(),
   durationMs: z.number().min(0),
 });
 

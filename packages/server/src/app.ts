@@ -1,8 +1,10 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import staticPlugin from '@fastify/static';
 import { ZodError } from 'zod';
 
 // Load .env from project root (monorepo root is two levels up from packages/server)
@@ -63,6 +65,17 @@ export async function buildApp() {
     timestamp: new Date().toISOString(),
     version: '0.1.0',
   }));
+
+  // Screenshot static file serving
+  const screenshotBaseDir = join(tmpdir(), 'ai-tester-screenshots');
+  if (!existsSync(screenshotBaseDir)) {
+    mkdirSync(screenshotBaseDir, { recursive: true });
+  }
+  await app.register(staticPlugin, {
+    root: screenshotBaseDir,
+    prefix: '/api/v1/screenshots/',
+    decorateReply: false,
+  });
 
   // Register routes
   await app.register(projectRoutes);
