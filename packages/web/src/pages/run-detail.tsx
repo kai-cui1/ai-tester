@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { runs, type TestRun, type TestCaseResult, type TestStepResult } from "@/lib/api";
-import { ArrowLeft, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronRight, Globe, Camera } from "lucide-react";
 
 export function RunDetailPage() {
   const { t, i18n } = useTranslation();
@@ -148,6 +148,7 @@ function StepResultRow({ step }: { step: TestStepResult }) {
               {step.request && <TabsTrigger value="request" className="text-xs h-7">{t("runDetail.tabs.request")}</TabsTrigger>}
               {step.response && <TabsTrigger value="response" className="text-xs h-7">{t("runDetail.tabs.response")}</TabsTrigger>}
               {step.assertion && <TabsTrigger value="assertion" className="text-xs h-7">{t("runDetail.tabs.assertion")}</TabsTrigger>}
+              {step.browser && <TabsTrigger value="browser" className="text-xs h-7"><Globe className="h-3 w-3 mr-1" />Browser</TabsTrigger>}
               {step.error && <TabsTrigger value="error" className="text-xs h-7">{t("runDetail.tabs.error")}</TabsTrigger>}
             </TabsList>
 
@@ -158,6 +159,13 @@ function StepResultRow({ step }: { step: TestStepResult }) {
                 <p>{t("runDetail.overview.duration")}{step.durationMs}ms</p>
                 {step.extractedVar && (
                   <p>{t("runDetail.overview.extracted")}<span className="font-mono">{step.extractedVar.variableName}</span> = <span className="font-mono text-primary">{JSON.stringify(step.extractedVar.value)}</span></p>
+                )}
+                {step.browser && (
+                  <>
+                    <p>操作: <Badge variant="outline" className="text-xs font-mono">{step.browser.action}</Badge></p>
+                    {step.browser.url && <p>URL: <span className="font-mono text-primary">{step.browser.url}</span></p>}
+                    {step.browser.title && <p>标题: <span className="font-mono">{step.browser.title}</span></p>}
+                  </>
                 )}
               </div>
             </TabsContent>
@@ -198,6 +206,51 @@ function StepResultRow({ step }: { step: TestStepResult }) {
                 <div className="text-xs text-destructive">
                   <p className="font-medium">{step.error.message}</p>
                   {step.error.stack && <pre className="bg-muted p-2 rounded mt-1 overflow-x-auto max-h-32">{step.error.stack}</pre>}
+                </div>
+              </TabsContent>
+            )}
+
+            {step.browser && (
+              <TabsContent value="browser">
+                <div className="text-xs space-y-3">
+                  <div className="space-y-1">
+                    <p>操作: <Badge variant="outline" className="text-xs font-mono">{step.browser.action}</Badge></p>
+                    {step.browser.url && <p>当前 URL: <span className="font-mono text-primary">{step.browser.url}</span></p>}
+                    {step.browser.title && <p>页面标题: <span className="font-mono">{step.browser.title}</span></p>}
+                  </div>
+                  {step.browser.assertion && (
+                    <div className="space-y-1 border-l-2 pl-3" style={{ borderColor: step.browser.assertion.passed ? "var(--color-success)" : "var(--color-destructive)" }}>
+                      <p className="font-medium">浏览器断言</p>
+                      <p>类型: <span className="font-mono">{step.browser.assertion.type}</span></p>
+                      {step.browser.assertion.selector && <p>选择器: <span className="font-mono">{step.browser.assertion.selector}</span></p>}
+                      <p>操作符: <span className="font-mono">{step.browser.assertion.operator}</span></p>
+                      {step.browser.assertion.expected !== undefined && (
+                        <p>期望值: <span className="font-mono text-primary">{JSON.stringify(step.browser.assertion.expected)}</span></p>
+                      )}
+                      {step.browser.assertion.actual !== undefined && (
+                        <p>实际值: <span className="font-mono">{JSON.stringify(step.browser.assertion.actual)}</span></p>
+                      )}
+                      <p>结果: {step.browser.assertion.passed ? <Badge variant="success">通过</Badge> : <Badge variant="destructive">失败</Badge>}</p>
+                    </div>
+                  )}
+                  {step.browser.screenshot && (
+                    <div className="space-y-1">
+                      <p className="font-medium flex items-center gap-1"><Camera className="h-3 w-3" />截图</p>
+                      <img
+                        src={`/api/v1/screenshots/${step.browser.screenshot.split("/").slice(-2).join("/")}`}
+                        alt="Step screenshot"
+                        className="max-w-full rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={(e) => {
+                          const img = e.currentTarget;
+                          if (img.style.maxWidth === "none") {
+                            img.style.maxWidth = "";
+                          } else {
+                            img.style.maxWidth = "none";
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             )}

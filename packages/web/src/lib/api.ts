@@ -38,7 +38,7 @@ export interface Project {
 export interface TestStep {
   id: string;
   name: string;
-  type: "http" | "assertion" | "extract" | "call" | "load-dataset";
+  type: "http" | "assertion" | "extract" | "call" | "load-dataset" | "browser";
   config: Record<string, any>;
   order: number;
   continueOnFailure: boolean;
@@ -87,6 +87,20 @@ export interface TestStepResult {
   assertion?: { expression?: string; operator: string; expected?: any; actual?: any; passed: boolean };
   extractedVar?: { variableName: string; value: any };
   error?: { message: string; stack?: string };
+  browser?: {
+    action: string;
+    url?: string;
+    title?: string;
+    screenshot?: string;
+    assertion?: {
+      type: string;
+      selector?: string;
+      operator: string;
+      expected?: any;
+      actual?: any;
+      passed: boolean;
+    };
+  };
   durationMs: number;
 }
 

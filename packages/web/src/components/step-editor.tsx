@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { testCases, datasets as datasetsApi, type TestCase, type TestDataSet } from "@/lib/api";
+import { BrowserStepEditor } from "@/components/features/browser-step-editor";
 import { GripVertical, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 
 /* ── Types & Constants ── */
@@ -19,7 +20,7 @@ import { GripVertical, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 export interface StepForm {
   id?: string;
   name: string;
-  type: "http" | "assertion" | "extract" | "call" | "load-dataset";
+  type: "http" | "assertion" | "extract" | "call" | "load-dataset" | "browser";
   config: Record<string, any>;
   continueOnFailure: boolean;
   retryCount: number;
@@ -29,7 +30,7 @@ export function emptyStep(): StepForm {
   return { name: "", type: "http", config: { method: "GET", url: "", headers: {}, timeout: 30000 }, continueOnFailure: false, retryCount: 0 };
 }
 
-export const STEP_TYPES = ["http", "assertion", "extract", "call", "load-dataset"] as const;
+export const STEP_TYPES = ["http", "assertion", "extract", "call", "load-dataset", "browser"] as const;
 
 export const ASSERTION_SOURCES = ["status", "header", "body", "jsonpath", "variable"] as const;
 export const ASSERTION_OPERATORS = [
@@ -117,6 +118,7 @@ export function StepEditor({ index, step, total, projectId, compact, onChange, o
                 extract: { source: "jsonpath", expression: "", variableName: "" },
                 call: { testCaseId: "" },
                 "load-dataset": { datasetId: "", variableName: "" },
+                browser: { action: "navigate", url: "" },
               };
               onChange({ type: v, config: configs[v] || {} });
             }}>
@@ -370,6 +372,14 @@ export function StepEditor({ index, step, total, projectId, compact, onChange, o
               <p className="text-[11px] text-muted-foreground/70">{t("testCases.datasetConfig.variableHint")}</p>
             </div>
           </div>
+        )}
+
+        {/* ── Browser step config ── */}
+        {step.type === "browser" && (
+          <BrowserStepEditor
+            config={step.config}
+            onChange={(patch) => updateConfig(patch)}
+          />
         )}
       </div>
     </TooltipProvider>
