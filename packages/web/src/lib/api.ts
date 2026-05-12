@@ -100,6 +100,11 @@ export interface TestStepResult {
       actual?: any;
       passed: boolean;
     };
+    filePath?: string;
+    dialogAction?: string;
+    storageType?: string;
+    cookieValue?: string;
+    storageValue?: string;
   };
   durationMs: number;
 }

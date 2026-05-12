@@ -12,6 +12,9 @@ const BROWSER_ACTIONS = [
   "navigate", "click", "fill", "select", "check", "uncheck",
   "hover", "wait", "screenshot", "assert", "extract", "keyboard",
   "goBack", "goForward", "close",
+  "setCookie", "getCookie", "deleteCookie",
+  "setLocalStorage", "getLocalStorage", "setSessionStorage", "getSessionStorage", "clearStorage",
+  "uploadFile", "dialog",
 ] as const;
 
 const ASSERTION_TYPES = ["text", "value", "visible", "hidden", "url", "title", "attribute", "count", "screenshot", "visualDiff"] as const;
@@ -22,6 +25,9 @@ const OCR_LANGUAGES = ["eng", "chi_sim", "chi_sim+eng"] as const;
 const WAIT_UNTIL_OPTIONS = ["load", "domcontentloaded", "networkidle"] as const;
 const ELEMENT_STATES = ["visible", "hidden", "attached", "detached"] as const;
 const MOUSE_BUTTONS = ["left", "right", "middle"] as const;
+const COOKIE_SAMESITE_OPTIONS = ["Strict", "Lax", "None"] as const;
+const STORAGE_TYPES = ["localStorage", "sessionStorage", "all"] as const;
+const DIALOG_ACTIONS = ["accept", "dismiss"] as const;
 
 /* ── Props ── */
 
@@ -38,7 +44,7 @@ export function BrowserStepEditor({ config, onChange }: BrowserStepEditorProps) 
 
   // Which fields to show based on action
   const needsUrl = action === "navigate";
-  const needsSelector = ["click", "fill", "select", "check", "uncheck", "hover", "wait", "extract"].includes(action);
+  const needsSelector = ["click", "fill", "select", "check", "uncheck", "hover", "wait", "extract", "uploadFile"].includes(action);
   const needsValue = ["fill", "select"].includes(action);
   const needsWaitUntil = action === "navigate";
   const needsClear = action === "fill";
@@ -48,7 +54,15 @@ export function BrowserStepEditor({ config, onChange }: BrowserStepEditorProps) 
   const needsExtractOptions = action === "extract";
   const needsAssertOptions = action === "assert";
   const needsKeyboardOptions = action === "keyboard";
-  const needsTimeout = !["close"].includes(action);
+  const needsCookieOptions = ["setCookie", "getCookie", "deleteCookie"].includes(action);
+  const needsCookieValue = action === "setCookie";
+  const needsCookieAdvanced = action === "setCookie";
+  const needsStorageOptions = ["setLocalStorage", "getLocalStorage", "setSessionStorage", "getSessionStorage", "clearStorage"].includes(action);
+  const needsStorageValue = ["setLocalStorage", "setSessionStorage"].includes(action);
+  const needsStorageType = action === "clearStorage";
+  const needsFilePath = action === "uploadFile";
+  const needsDialogOptions = action === "dialog";
+  const needsTimeout = !["close", "dialog"].includes(action);
 
   return (
     <div className="space-y-2">
@@ -60,11 +74,19 @@ export function BrowserStepEditor({ config, onChange }: BrowserStepEditorProps) 
             // Reset config when action changes, keep only action
             const base: Record<string, any> = { action: v };
             if (v === "navigate") base.url = "";
-            if (["click", "fill", "select", "check", "uncheck", "hover", "wait", "extract"].includes(v)) base.selector = "";
+            if (["click", "fill", "select", "check", "uncheck", "hover", "wait", "extract", "uploadFile"].includes(v)) base.selector = "";
             if (["fill", "select"].includes(v)) base.value = "";
             if (v === "assert") base.assertion = { type: "text", operator: "equals" };
             if (v === "extract") { base.selector = ""; base.variableName = ""; }
             if (v === "keyboard") base.key = "";
+            if (["setCookie", "getCookie", "deleteCookie"].includes(v)) base.cookieName = "";
+            if (v === "setCookie") { base.cookieValue = ""; base.cookiePath = "/"; base.cookieSameSite = "Lax"; }
+            if (["getCookie", "getLocalStorage", "getSessionStorage"].includes(v)) base.variableName = "";
+            if (["setLocalStorage", "getLocalStorage", "setSessionStorage", "getSessionStorage"].includes(v)) base.storageKey = "";
+            if (["setLocalStorage", "setSessionStorage"].includes(v)) base.storageValue = "";
+            if (v === "clearStorage") base.storageType = "all";
+            if (v === "uploadFile") base.filePath = "";
+            if (v === "dialog") { base.dialogAction = "accept"; }
             onChange(base);
           }}>
             <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
@@ -458,6 +480,190 @@ export function BrowserStepEditor({ config, onChange }: BrowserStepEditorProps) 
                   onChange({ assertion: { ...config.assertion, expected: val === "" ? "" : isNaN(num) ? val : num } });
                 }}
                 placeholder={t("testCases.browserConfig.expectedPlaceholder")}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Cookie options */}
+      {needsCookieOptions && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.cookieNameLabel")}</Label>
+            <Input
+              className="h-8"
+              value={config.cookieName || ""}
+              onChange={(e) => onChange({ cookieName: e.target.value })}
+              placeholder={t("testCases.browserConfig.cookieNamePlaceholder")}
+            />
+          </div>
+          {needsCookieValue && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.cookieValueLabel")}</Label>
+              <Input
+                className="h-8"
+                value={config.cookieValue || ""}
+                onChange={(e) => onChange({ cookieValue: e.target.value })}
+                placeholder={t("testCases.browserConfig.cookieValuePlaceholder")}
+              />
+            </div>
+          )}
+          {needsCookieAdvanced && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.cookieDomainLabel")}</Label>
+                  <Input
+                    className="h-8"
+                    value={config.cookieDomain || ""}
+                    onChange={(e) => onChange({ cookieDomain: e.target.value || undefined })}
+                    placeholder={t("testCases.browserConfig.cookieDomainPlaceholder")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.cookiePathLabel")}</Label>
+                  <Input
+                    className="h-8"
+                    value={config.cookiePath || "/"}
+                    onChange={(e) => onChange({ cookiePath: e.target.value })}
+                    placeholder="/"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <Checkbox
+                    checked={config.cookieHttpOnly || false}
+                    onCheckedChange={(checked) => onChange({ cookieHttpOnly: !!checked })}
+                  />
+                  <span className="text-muted-foreground">{t("testCases.browserConfig.cookieHttpOnlyLabel")}</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <Checkbox
+                    checked={config.cookieSecure || false}
+                    onCheckedChange={(checked) => onChange({ cookieSecure: !!checked })}
+                  />
+                  <span className="text-muted-foreground">{t("testCases.browserConfig.cookieSecureLabel")}</span>
+                </label>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.cookieSameSiteLabel")}</Label>
+                  <Select value={config.cookieSameSite || "Lax"} onValueChange={(v) => onChange({ cookieSameSite: v })}>
+                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {COOKIE_SAMESITE_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </>
+          )}
+          {action === "getCookie" && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.variableNameLabel")}</Label>
+              <Input
+                className="h-8"
+                value={config.variableName || ""}
+                onChange={(e) => onChange({ variableName: e.target.value })}
+                placeholder={t("testCases.browserConfig.variableNamePlaceholder")}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Storage options */}
+      {needsStorageOptions && (
+        <div className="space-y-2">
+          {needsStorageType ? (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.storageTypeLabel")}</Label>
+              <Select value={config.storageType || "all"} onValueChange={(v) => onChange({ storageType: v })}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STORAGE_TYPES.map((s) => (
+                    <SelectItem key={s} value={s}>{t(`testCases.browserConfig.storageType.${s}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.storageKeyLabel")}</Label>
+                <Input
+                  className="h-8"
+                  value={config.storageKey || ""}
+                  onChange={(e) => onChange({ storageKey: e.target.value })}
+                  placeholder={t("testCases.browserConfig.storageKeyPlaceholder")}
+                />
+              </div>
+              {needsStorageValue && (
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.storageValueLabel")}</Label>
+                  <Input
+                    className="h-8"
+                    value={config.storageValue || ""}
+                    onChange={(e) => onChange({ storageValue: e.target.value })}
+                    placeholder={t("testCases.browserConfig.storageValuePlaceholder")}
+                  />
+                </div>
+              )}
+              {["getLocalStorage", "getSessionStorage"].includes(action) && (
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.variableNameLabel")}</Label>
+                  <Input
+                    className="h-8"
+                    value={config.variableName || ""}
+                    onChange={(e) => onChange({ variableName: e.target.value })}
+                    placeholder={t("testCases.browserConfig.variableNamePlaceholder")}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* File upload options */}
+      {needsFilePath && (
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.filePathLabel")}</Label>
+          <Input
+            className="h-8"
+            value={config.filePath || ""}
+            onChange={(e) => onChange({ filePath: e.target.value })}
+            placeholder={t("testCases.browserConfig.filePathPlaceholder")}
+          />
+        </div>
+      )}
+
+      {/* Dialog options */}
+      {needsDialogOptions && (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.dialogActionLabel")}</Label>
+              <Select value={config.dialogAction || "accept"} onValueChange={(v) => onChange({ dialogAction: v })}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DIALOG_ACTIONS.map((d) => (
+                    <SelectItem key={d} value={d}>{t(`testCases.browserConfig.dialogAction.${d}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {config.dialogAction === "accept" && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.dialogPromptTextLabel")}</Label>
+              <Input
+                className="h-8"
+                value={config.dialogPromptText || ""}
+                onChange={(e) => onChange({ dialogPromptText: e.target.value || undefined })}
+                placeholder={t("testCases.browserConfig.dialogPromptTextPlaceholder")}
               />
             </div>
           )}

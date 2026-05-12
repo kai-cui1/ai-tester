@@ -217,6 +217,11 @@ function StepResultRow({ step }: { step: TestStepResult }) {
                     <p>操作: <Badge variant="outline" className="text-xs font-mono">{step.browser.action}</Badge></p>
                     {step.browser.url && <p>当前 URL: <span className="font-mono text-primary">{step.browser.url}</span></p>}
                     {step.browser.title && <p>页面标题: <span className="font-mono">{step.browser.title}</span></p>}
+                    {step.browser.filePath && <p>文件路径: <span className="font-mono text-primary">{step.browser.filePath}</span></p>}
+                    {step.browser.dialogAction && <p>弹窗处理: <span className="font-mono">{step.browser.dialogAction}</span></p>}
+                    {step.browser.storageType && <p>清除类型: <span className="font-mono">{step.browser.storageType}</span></p>}
+                    {step.browser.cookieValue !== undefined && <p>Cookie 值: <span className="font-mono text-primary">{JSON.stringify(step.browser.cookieValue)}</span></p>}
+                    {step.browser.storageValue !== undefined && <p>Storage 值: <span className="font-mono text-primary">{JSON.stringify(step.browser.storageValue)}</span></p>}
                   </div>
                   {step.browser.assertion && (
                     <div className="space-y-1 border-l-2 pl-3" style={{ borderColor: step.browser.assertion.passed ? "var(--color-success)" : "var(--color-destructive)" }}>

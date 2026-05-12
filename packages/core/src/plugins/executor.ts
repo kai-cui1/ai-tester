@@ -23,6 +23,11 @@ export interface StepExecutionResult {
       actual?: any;
       passed: boolean;
     };
+    filePath?: string;
+    dialogAction?: string;
+    storageType?: string;
+    cookieValue?: string;
+    storageValue?: string;
   };
 }
 

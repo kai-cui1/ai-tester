@@ -17,6 +17,41 @@ import { useProject } from "@/lib/project-context";
 import { Plus, MoreHorizontal, Trash2, Edit, Check } from "lucide-react";
 import { toast } from "sonner";
 
+/* ── Environment form helpers ── */
+interface EnvFormEntry {
+  id: string;
+  name: string;
+  baseUrl: string;
+  variables: { key: string; value: string }[];
+}
+
+function createEmptyEnv(): EnvFormEntry {
+  return { id: Math.random().toString(36).slice(2), name: "", baseUrl: "", variables: [] };
+}
+
+function projectToForm(p: Project): { name: string; description: string; environments: EnvFormEntry[] } {
+  return {
+    name: p.name,
+    description: p.description ?? "",
+    environments: p.environments.map((e) => ({
+      id: Math.random().toString(36).slice(2),
+      name: e.name,
+      baseUrl: e.baseUrl,
+      variables: Object.entries(e.variables).map(([key, value]) => ({ key, value })),
+    })),
+  };
+}
+
+function formToEnvironments(envs: EnvFormEntry[]) {
+  return envs.map((e) => ({
+    name: e.name,
+    baseUrl: e.baseUrl,
+    variables: Object.fromEntries(
+      e.variables.filter((v) => v.key.trim()).map((v) => [v.key.trim(), v.value])
+    ),
+  }));
+}
+
 export function ProjectsPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -25,7 +60,11 @@ export function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [form, setForm] = useState({ name: "", description: "" });
+  const [form, setForm] = useState<{ name: string; description: string; environments: EnvFormEntry[] }>({
+    name: "",
+    description: "",
+    environments: [],
+  });
 
   const load = () => {
     setLoading(true);
@@ -36,17 +75,22 @@ export function ProjectsPage() {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
+    const payload = {
+      name: form.name,
+      description: form.description,
+      environments: formToEnvironments(form.environments),
+    };
     try {
       if (editingProject) {
-        await projects.update(editingProject.id, form);
+        await projects.update(editingProject.id, payload);
         toast.success(t("projects.updateSuccess"));
       } else {
-        await projects.create(form);
+        await projects.create(payload);
         toast.success(t("projects.createSuccess"));
       }
       setDialogOpen(false);
       setEditingProject(null);
-      setForm({ name: "", description: "" });
+      setForm({ name: "", description: "", environments: [] });
       load();
     } catch (err) {
       toast.error((err as Error).message || t("common.saveFailed"));
@@ -67,14 +111,60 @@ export function ProjectsPage() {
 
   const openEdit = (p: Project) => {
     setEditingProject(p);
-    setForm({ name: p.name, description: p.description ?? "" });
+    setForm(projectToForm(p));
     setDialogOpen(true);
   };
 
   const openCreate = () => {
     setEditingProject(null);
-    setForm({ name: "", description: "" });
+    setForm({ name: "", description: "", environments: [] });
     setDialogOpen(true);
+  };
+
+  /* ── Environment list helpers ── */
+  const addEnv = () => {
+    setForm((prev) => ({ ...prev, environments: [...prev.environments, createEmptyEnv()] }));
+  };
+
+  const updateEnv = (index: number, patch: Partial<Omit<EnvFormEntry, "id" | "variables">>) => {
+    setForm((prev) => {
+      const envs = [...prev.environments];
+      envs[index] = { ...envs[index], ...patch };
+      return { ...prev, environments: envs };
+    });
+  };
+
+  const removeEnv = (index: number) => {
+    setForm((prev) => ({ ...prev, environments: prev.environments.filter((_, i) => i !== index) }));
+  };
+
+  const addVariable = (envIndex: number) => {
+    setForm((prev) => {
+      const envs = [...prev.environments];
+      envs[envIndex] = { ...envs[envIndex], variables: [...envs[envIndex].variables, { key: "", value: "" }] };
+      return { ...prev, environments: envs };
+    });
+  };
+
+  const updateVariable = (envIndex: number, varIndex: number, patch: Partial<{ key: string; value: string }>) => {
+    setForm((prev) => {
+      const envs = [...prev.environments];
+      const vars = [...envs[envIndex].variables];
+      vars[varIndex] = { ...vars[varIndex], ...patch };
+      envs[envIndex] = { ...envs[envIndex], variables: vars };
+      return { ...prev, environments: envs };
+    });
+  };
+
+  const removeVariable = (envIndex: number, varIndex: number) => {
+    setForm((prev) => {
+      const envs = [...prev.environments];
+      envs[envIndex] = {
+        ...envs[envIndex],
+        variables: envs[envIndex].variables.filter((_, i) => i !== varIndex),
+      };
+      return { ...prev, environments: envs };
+    });
   };
 
   return (
@@ -90,14 +180,14 @@ export function ProjectsPage() {
               <Plus className="mr-2 h-4 w-4" /> {t("projects.new")}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{t(editingProject ? "projects.editTitle" : "projects.createTitle")}</DialogTitle>
               <DialogDescription>
                 {t(editingProject ? "projects.updateDesc" : "projects.createDesc")}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
               <div className="space-y-2">
                 <Label htmlFor="name">{t("common.name")}</Label>
                 <Input
@@ -115,6 +205,84 @@ export function ProjectsPage() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder={t("projects.descPlaceholder")}
                 />
+              </div>
+
+              {/* ── Environment Configuration ── */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-medium">{t("projects.envConfig")}</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addEnv}>
+                    <Plus className="mr-1 h-3 w-3" /> {t("projects.addEnv")}
+                  </Button>
+                </div>
+                {form.environments.length === 0 && (
+                  <p className="text-sm text-muted-foreground">{t("projects.noEnvironments")}</p>
+                )}
+                {form.environments.map((env, envIdx) => (
+                  <div key={env.id} className="border rounded-lg p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{t("projects.envName")} #{envIdx + 1}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-destructive hover:text-destructive"
+                        onClick={() => removeEnv(envIdx)}
+                      >
+                        <Trash2 className="mr-1 h-3 w-3" /> {t("projects.removeEnv")}
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">{t("projects.envName")}</Label>
+                      <Input
+                        value={env.name}
+                        onChange={(e) => updateEnv(envIdx, { name: e.target.value })}
+                        placeholder={t("projects.envNamePlaceholder")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">{t("projects.baseUrl")}</Label>
+                      <Input
+                        value={env.baseUrl}
+                        onChange={(e) => updateEnv(envIdx, { baseUrl: e.target.value })}
+                        placeholder={t("projects.baseUrlPlaceholder")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-muted-foreground">{t("projects.variables")}</Label>
+                        <Button type="button" variant="ghost" size="sm" className="h-7" onClick={() => addVariable(envIdx)}>
+                          <Plus className="mr-1 h-3 w-3" /> {t("projects.addVariable")}
+                        </Button>
+                      </div>
+                      {env.variables.map((v, varIdx) => (
+                        <div key={varIdx} className="flex items-center gap-2">
+                          <Input
+                            className="flex-1"
+                            placeholder={t("projects.variableKey")}
+                            value={v.key}
+                            onChange={(e) => updateVariable(envIdx, varIdx, { key: e.target.value })}
+                          />
+                          <Input
+                            className="flex-1"
+                            placeholder={t("projects.variableValue")}
+                            value={v.value}
+                            onChange={(e) => updateVariable(envIdx, varIdx, { value: e.target.value })}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => removeVariable(envIdx, varIdx)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <DialogFooter>

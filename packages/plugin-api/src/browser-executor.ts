@@ -56,6 +56,11 @@ export class BrowserExecutor implements Executor {
           title: result.title,
           screenshot: result.screenshot,
           assertion: result.assertion,
+          filePath: result.filePath,
+          dialogAction: result.dialogAction,
+          storageType: result.storageType,
+          cookieValue: result.cookieValue,
+          storageValue: result.storageValue,
         },
         assertion: result.assertion && !result.assertion.passed
           ? {
@@ -243,6 +248,120 @@ export class BrowserExecutor implements Executor {
         await page.close();
         context.browserPage = undefined;
         return { action: 'close', passed: true };
+      }
+
+      case 'setCookie': {
+        await page.context().addCookies([
+          {
+            name: config.cookieName!,
+            value: config.cookieValue ?? '',
+            domain: config.cookieDomain,
+            path: config.cookiePath ?? '/',
+            httpOnly: config.cookieHttpOnly ?? false,
+            secure: config.cookieSecure ?? false,
+            sameSite: config.cookieSameSite as 'Strict' | 'Lax' | 'None' | undefined,
+          },
+        ]);
+        return { action: 'setCookie', passed: true };
+      }
+
+      case 'getCookie': {
+        const cookies = await page.context().cookies(page.url() ? [page.url()] : undefined);
+        const found = cookies.find((c: any) => c.name === config.cookieName);
+        const value = found?.value ?? '';
+        context.variables.set(config.variableName!, value);
+        return {
+          action: 'getCookie',
+          passed: true,
+          extractedVar: { variableName: config.variableName!, value },
+          cookieValue: value,
+        };
+      }
+
+      case 'deleteCookie': {
+        await page.context().addCookies([
+          {
+            name: config.cookieName!,
+            value: '',
+            domain: config.cookieDomain,
+            path: config.cookiePath ?? '/',
+            expires: 0,
+          },
+        ]);
+        return { action: 'deleteCookie', passed: true };
+      }
+
+      case 'setLocalStorage': {
+        await page.evaluate(
+          ({ key, value }: { key: string; value: string }) => localStorage.setItem(key, value),
+          { key: config.storageKey!, value: config.storageValue ?? '' },
+        );
+        return { action: 'setLocalStorage', passed: true };
+      }
+
+      case 'getLocalStorage': {
+        const lsValue = await page.evaluate(
+          ({ key }: { key: string }) => localStorage.getItem(key),
+          { key: config.storageKey! },
+        );
+        context.variables.set(config.variableName!, lsValue ?? '');
+        return {
+          action: 'getLocalStorage',
+          passed: true,
+          extractedVar: { variableName: config.variableName!, value: lsValue ?? '' },
+          storageValue: lsValue ?? '',
+        };
+      }
+
+      case 'setSessionStorage': {
+        await page.evaluate(
+          ({ key, value }: { key: string; value: string }) => sessionStorage.setItem(key, value),
+          { key: config.storageKey!, value: config.storageValue ?? '' },
+        );
+        return { action: 'setSessionStorage', passed: true };
+      }
+
+      case 'getSessionStorage': {
+        const ssValue = await page.evaluate(
+          ({ key }: { key: string }) => sessionStorage.getItem(key),
+          { key: config.storageKey! },
+        );
+        context.variables.set(config.variableName!, ssValue ?? '');
+        return {
+          action: 'getSessionStorage',
+          passed: true,
+          extractedVar: { variableName: config.variableName!, value: ssValue ?? '' },
+          storageValue: ssValue ?? '',
+        };
+      }
+
+      case 'clearStorage': {
+        const storageType = config.storageType ?? 'all';
+        if (storageType === 'localStorage' || storageType === 'all') {
+          await page.evaluate(() => localStorage.clear());
+        }
+        if (storageType === 'sessionStorage' || storageType === 'all') {
+          await page.evaluate(() => sessionStorage.clear());
+        }
+        return { action: 'clearStorage', passed: true, storageType };
+      }
+
+      case 'uploadFile': {
+        await page.locator(config.selector).setInputFiles(config.filePath!);
+        return { action: 'uploadFile', passed: true, filePath: config.filePath };
+      }
+
+      case 'dialog': {
+        const dialogAction = config.dialogAction ?? 'accept';
+        const promptText = config.dialogPromptText;
+        page.once('dialog', async (dialog) => {
+          if (dialogAction === 'accept') {
+            await dialog.accept(promptText);
+          } else {
+            await dialog.dismiss();
+          }
+        });
+        return { action: 'dialog', passed: true, dialogAction };
       }
 
       default:

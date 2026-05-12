@@ -77,6 +77,19 @@ export const BrowserAction = z.enum([
   'goBack',
   'goForward',
   'close',
+  // cookie / storage / session management
+  'setCookie',
+  'getCookie',
+  'deleteCookie',
+  'setLocalStorage',
+  'getLocalStorage',
+  'setSessionStorage',
+  'getSessionStorage',
+  'clearStorage',
+  // file upload
+  'uploadFile',
+  // dialog handling
+  'dialog',
 ]);
 
 export const BrowserAssertionType = z.enum([
@@ -136,6 +149,23 @@ export const BrowserStepConfigSchema = z.object({
   assertion: BrowserAssertionSchema.optional(),
   // keyboard
   key: z.string().optional(),
+  // cookie management
+  cookieName: z.string().optional(),
+  cookieValue: z.string().optional(),
+  cookieDomain: z.string().optional(),
+  cookiePath: z.string().optional(),
+  cookieHttpOnly: z.boolean().default(false).optional(),
+  cookieSecure: z.boolean().default(false).optional(),
+  cookieSameSite: z.enum(['Strict', 'Lax', 'None']).default('Lax').optional(),
+  // storage management
+  storageKey: z.string().optional(),
+  storageValue: z.string().optional(),
+  storageType: z.enum(['localStorage', 'sessionStorage', 'all']).optional(),
+  // file upload
+  filePath: z.string().optional(),
+  // dialog handling
+  dialogAction: z.enum(['accept', 'dismiss']).default('accept').optional(),
+  dialogPromptText: z.string().optional(),
   // global
   timeout: z.number().positive().default(30000).optional(),
 });
