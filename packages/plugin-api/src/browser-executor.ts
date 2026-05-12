@@ -3,15 +3,19 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs/promises';
 import type { Executor, StepExecutionResult } from '@ai-tester/core';
-import type { RunContext } from '@ai-tester/core';
+import type { RunContext, ScreenshotMeta } from '@ai-tester/core';
 import type { TestStep } from '@ai-tester/core';
 import { BrowserStepConfigSchema } from '@ai-tester/core';
+import { OcrService } from './ocr-service.js';
+import { VisualRegressionService } from './visual-regression-service.js';
 
 export class BrowserExecutor implements Executor {
   readonly type = 'browser';
   readonly configSchema = BrowserStepConfigSchema;
 
   private browser?: Browser;
+  private ocrService?: OcrService;
+  private visualRegressionService?: VisualRegressionService;
 
   async setup(context: RunContext): Promise<void> {
     this.browser = await chromium.launch({ headless: true });
@@ -22,8 +26,11 @@ export class BrowserExecutor implements Executor {
   async teardown(context: RunContext): Promise<void> {
     await context.browserPage?.close().catch(() => {});
     await this.browser?.close().catch(() => {});
+    await this.ocrService?.terminate().catch(() => {});
     context.browserPage = undefined;
     this.browser = undefined;
+    this.ocrService = undefined;
+    this.visualRegressionService = undefined;
   }
 
   async execute(step: TestStep, context: RunContext): Promise<StepExecutionResult> {
@@ -158,14 +165,50 @@ export class BrowserExecutor implements Executor {
           await page.screenshot(options);
         }
         context.screenshots.push(screenshotPath);
-        return { action: 'screenshot', passed: true, screenshot: screenshotPath };
+        // Read metadata from the generated PNG
+        const stat = await fs.stat(screenshotPath);
+        const dims = await this.readPngDimensions(screenshotPath);
+        const meta: ScreenshotMeta = {
+          path: screenshotPath,
+          width: dims.width,
+          height: dims.height,
+          size: stat.size,
+        };
+        context.lastScreenshot = meta;
+        return {
+          action: 'screenshot',
+          passed: true,
+          screenshot: screenshotPath,
+          screenshotMeta: meta,
+        };
       }
 
       case 'assert': {
-        return this.executeAssertion(config.assertion, page, timeout);
+        return this.executeAssertion(config.assertion, page, timeout, context);
       }
 
       case 'extract': {
+        const source = config.source ?? 'dom';
+        if (source === 'screenshot') {
+          // OCR-based extraction from screenshot
+          const meta = context.lastScreenshot;
+          if (!meta) {
+            throw new Error('截图提取失败：没有可用的截图，请先执行截图步骤');
+          }
+          if (!this.ocrService) {
+            this.ocrService = new OcrService();
+          }
+          const lang = config.lang ?? 'chi_sim+eng';
+          const text = await this.ocrService.recognize(meta.path, { lang: lang as any });
+          context.variables.set(config.variableName, text);
+          return {
+            action: 'extract',
+            passed: true,
+            extractedVar: { variableName: config.variableName, value: text },
+            ocr: { text, lang },
+          };
+        }
+        // Default: DOM-based extraction
         const locator = page.locator(config.selector);
         let value: any;
         if (config.attribute) {
@@ -207,7 +250,7 @@ export class BrowserExecutor implements Executor {
     }
   }
 
-  private async executeAssertion(assertion: any, page: Page, timeout: number): Promise<any> {
+  private async executeAssertion(assertion: any, page: Page, timeout: number, context: RunContext): Promise<any> {
     const operator = assertion.operator ?? 'equals';
     let actual: any;
     let expected = assertion.expected;
@@ -240,12 +283,84 @@ export class BrowserExecutor implements Executor {
         break;
       }
       case 'attribute': {
-        actual = await page.locator(assertion.selector).getAttribute(assertion.attribute, { timeout });
+        const attrName = assertion.attribute!;
+        if (attrName === 'checked') {
+          actual = await page.locator(assertion.selector).isChecked({ timeout });
+        } else {
+          actual = await page.locator(assertion.selector).getAttribute(attrName, { timeout });
+        }
         break;
       }
       case 'count': {
         actual = await page.locator(assertion.selector).count();
         break;
+      }
+      case 'screenshot': {
+        const prop = assertion.property ?? 'fileExists';
+        const meta = context.lastScreenshot;
+        if (!meta) {
+          throw new Error('截图断言失败：没有可用的截图，请先执行截图步骤');
+        }
+        switch (prop) {
+          case 'fileExists': {
+            const exists = await fs.access(meta.path).then(() => true).catch(() => false);
+            actual = exists;
+            expected = true;
+            break;
+          }
+          case 'width':
+            actual = meta.width;
+            break;
+          case 'height':
+            actual = meta.height;
+            break;
+          case 'size':
+            actual = meta.size;
+            break;
+          default:
+            throw new Error(`不支持的截图属性: ${prop}`);
+        }
+        break;
+      }
+      case 'visualDiff': {
+        const baselinePath = assertion.baselinePath;
+        if (!baselinePath) {
+          throw new Error('视觉回归比对失败：缺少基准图路径 (baselinePath)');
+        }
+        const meta = context.lastScreenshot;
+        if (!meta) {
+          throw new Error('视觉回归比对失败：没有可用的截图，请先执行截图步骤');
+        }
+        if (!this.visualRegressionService) {
+          this.visualRegressionService = new VisualRegressionService();
+        }
+        const result = await this.visualRegressionService.compare(
+          baselinePath,
+          meta.path,
+          {
+            threshold: assertion.threshold ?? 0.1,
+            diffPercentageThreshold: assertion.expected ?? 1.0,
+            outputDir: this.getScreenshotDir(context.runId),
+          },
+        );
+        actual = result.diffPercentage;
+        expected = assertion.expected ?? 1.0;
+        const passed = result.passed;
+        return {
+          action: 'assert',
+          passed,
+          assertion: {
+            type: assertion.type,
+            operator: 'lte',
+            expected,
+            actual,
+            passed,
+            baselinePath,
+            diffImage: result.diffImagePath,
+            diffCount: result.diffCount,
+            diffPercentage: result.diffPercentage,
+          },
+        };
       }
       default:
         throw new Error(`不支持的断言类型: ${assertion.type}`);
@@ -256,7 +371,15 @@ export class BrowserExecutor implements Executor {
     return {
       action: 'assert',
       passed,
-      assertion: { type: assertion.type, selector: assertion.selector, operator, expected, actual, passed },
+      assertion: {
+        type: assertion.type,
+        selector: assertion.selector,
+        operator,
+        expected,
+        actual,
+        passed,
+        property: assertion.property,
+      },
     };
   }
 
@@ -265,7 +388,23 @@ export class BrowserExecutor implements Executor {
       case 'equals': return actual === expected;
       case 'contains': return String(actual).includes(String(expected));
       case 'matches': return new RegExp(String(expected)).test(String(actual));
+      case 'gt': return Number(actual) > Number(expected);
+      case 'gte': return Number(actual) >= Number(expected);
+      case 'lt': return Number(actual) < Number(expected);
+      case 'lte': return Number(actual) <= Number(expected);
       default: return false;
     }
+  }
+
+  /**
+   * Read PNG dimensions from IHDR chunk (no external deps).
+   * PNG layout: 8-byte signature → IHDR chunk: 4-byte length + 4-byte "IHDR" + 4-byte width + 4-byte height + ...
+   */
+  private async readPngDimensions(filePath: string): Promise<{ width: number; height: number }> {
+    const buffer = await fs.readFile(filePath);
+    // Offset 16: width (4 bytes BE), offset 20: height (4 bytes BE)
+    const width = buffer.readUInt32BE(16);
+    const height = buffer.readUInt32BE(20);
+    return { width, height };
   }
 }

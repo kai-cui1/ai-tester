@@ -35,6 +35,7 @@ export function PipelineView({ steps, projectId, onStepsChange }: PipelineViewPr
       extract: { source: "jsonpath", expression: "", variableName: "" },
       call: { testCaseId: "" },
       "load-dataset": { datasetId: "", variableName: "" },
+      browser: { action: "navigate", url: "", timeout: 30000 },
     };
     const step: StepForm = { name: "", type, config: configs[type] || {}, continueOnFailure: false, retryCount: 0 };
     const next = [...steps];

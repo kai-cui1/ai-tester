@@ -308,6 +308,10 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
         平台简介
       </a>
+      <a class="nav-item" data-section="dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        仪表盘
+      </a>
     </div>
     <div class="nav-group">
       <div class="nav-group-title">项目管理</div>
@@ -337,6 +341,10 @@
     </div>
     <div class="nav-group">
       <div class="nav-group-title">AI 能力</div>
+      <a class="nav-item" data-section="ai-providers">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        AI 服务商管理
+      </a>
       <a class="nav-item" data-section="ai-settings">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         AI 设置
@@ -366,9 +374,10 @@
       <h2>核心能力</h2>
       <ul>
         <li><strong>项目管理</strong> — 以项目为维度组织测试资源，支持多环境配置</li>
-        <li><strong>测试用例编写</strong> — 可视化步骤编辑器，支持 HTTP 请求、断言、变量提取、子用例调用、数据集加载 5 种步骤类型</li>
+        <li><strong>测试用例编写</strong> — 可视化步骤编辑器，支持 HTTP 请求、断言、变量提取、子用例调用、数据集加载、<strong>浏览器操作</strong> 6 种步骤类型</li>
+        <li><strong>E2E 浏览器测试</strong> — 支持页面导航、元素交互、截图、OCR 文本提取、视觉回归比对等浏览器自动化能力</li>
         <li><strong>测试套件</strong> — 将多个用例组织为套件，一键批量执行</li>
-        <li><strong>执行与结果</strong> — 实时查看执行状态、请求/响应详情、断言结果</li>
+        <li><strong>执行与结果</strong> — 实时查看执行状态、请求/响应详情、断言结果、截图与 Diff 对比</li>
         <li><strong>数据集</strong> — 管理测试数据，驱动数据驱动的测试场景</li>
         <li><strong>AI 自动生成</strong> — 配置 LLM 后，基于 API 知识自动生成测试用例</li>
       </ul>
@@ -420,6 +429,36 @@ graph LR
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== 仪表盘 ==================== -->
+  <div class="section" id="sec-dashboard">
+    <div class="content">
+      <h1 class="section-title">仪表盘</h1>
+      <p class="section-subtitle">仪表盘是 AI-Tester 的首页，提供项目维度的测试数据概览，帮助您快速了解当前项目的测试健康状况。</p>
+
+      <p style="margin:16px 0;"><img src="./screenshots/dashboard.png" alt="仪表盘" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
+
+      <h2>数据概览卡片</h2>
+      <p>仪表盘顶部展示 4 张核心指标卡片：</p>
+      <ul>
+        <li><strong>测试用例总数</strong> — 当前项目下的用例数量</li>
+        <li><strong>测试套件总数</strong> — 当前项目下的套件数量</li>
+        <li><strong>最近执行次数</strong> — 近 7 天的测试执行次数</li>
+        <li><strong>通过率</strong> — 最近执行的通过用例占比</li>
+      </ul>
+
+      <h2>最近执行记录</h2>
+      <p>仪表盘中部展示最近 5 条测试执行记录，包含：</p>
+      <ul>
+        <li>执行时间、触发方式（手动/API）、执行状态</li>
+        <li>通过/失败用例数统计</li>
+        <li>点击可跳转至运行详情页</li>
+      </ul>
+
+      <h2>项目切换</h2>
+      <p>仪表盘左上角显示当前选中的项目名称，点击可展开项目下拉列表进行切换。切换后所有数据概览会自动刷新。</p>
     </div>
   </div>
 
@@ -506,11 +545,13 @@ graph TD
     F -->|extract| I[变量提取]
     F -->|call| J[调用子用例]
     F -->|load-dataset| K[加载数据集]
+    F -->|browser| M[浏览器操作]
     G --> L[保存用例]
     H --> L
     I --> L
     J --> L
     K --> L
+    M --> L
         </pre>
       </div>
 
@@ -523,7 +564,7 @@ graph TD
         <li><strong>标签</strong>：逗号分隔的字符串，用于横向分类过滤</li>
       </ul>
 
-      <h2>五种步骤类型</h2>
+      <h2>六种步骤类型</h2>
 
       <h3>1. HTTP 请求步骤</h3>
       <p>发送一次 HTTP 请求，是最常用的步骤类型。</p>
@@ -561,6 +602,140 @@ graph TD
       <p>将数据集加载到上下文变量中，用于数据驱动测试。</p>
       <p style="margin:12px 0;"><img src="./screenshots/dataset-step.png" alt="加载数据集步骤配置" style="max-width:100%;border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></p>
       <p>加载后通过 <code>{{variableName}}</code> 访问行数组，通过 <code>{{variableName[0].field}}</code> 访问具体字段。</p>
+
+      <h3>6. 浏览器操作步骤</h3>
+      <p>基于 Playwright 的 E2E 浏览器自动化，支持页面导航、元素交互、截图、断言和变量提取。</p>
+
+      <h4>支持的浏览器操作</h4>
+      <table class="mock-table">
+        <tr><th>操作</th><th>说明</th><th>常用配置</th></tr>
+        <tr><td><code>navigate</code></td><td>页面导航</td><td>URL、waitUntil</td></tr>
+        <tr><td><code>click</code></td><td>元素点击</td><td>selector、button、clickCount、force</td></tr>
+        <tr><td><code>fill</code></td><td>文本输入</td><td>selector、value、clear、force</td></tr>
+        <tr><td><code>select</code></td><td>下拉选择</td><td>selector、value</td></tr>
+        <tr><td><code>check</code> / <code>uncheck</code></td><td>勾选/取消勾选</td><td>selector、force</td></tr>
+        <tr><td><code>hover</code></td><td>鼠标悬停</td><td>selector、force</td></tr>
+        <tr><td><code>wait</code></td><td>等待</td><td>selector、duration、state</td></tr>
+        <tr><td><code>screenshot</code></td><td>页面截图</td><td>fullPage、selector</td></tr>
+        <tr><td><code>assert</code></td><td>浏览器断言</td><td>type、selector、expected、operator</td></tr>
+        <tr><td><code>extract</code></td><td>内容提取</td><td>source、selector、variableName</td></tr>
+        <tr><td><code>keyboard</code></td><td>键盘按键</td><td>key</td></tr>
+        <tr><td><code>goBack</code> / <code>goForward</code></td><td>前进/后退</td><td>—</td></tr>
+        <tr><td><code>close</code></td><td>关闭页面</td><td>—</td></tr>
+      </table>
+
+      <h4>浏览器断言类型</h4>
+      <table class="mock-table">
+        <tr><th>断言类型</th><th>说明</th><th>适用场景</th></tr>
+        <tr><td><code>text</code></td><td>元素文本内容</td><td>验证页面文字</td></tr>
+        <tr><td><code>value</code></td><td>表单输入值</td><td>验证输入框内容</td></tr>
+        <tr><td><code>visible</code> / <code>hidden</code></td><td>元素可见/隐藏</td><td>验证元素显示状态</td></tr>
+        <tr><td><code>url</code></td><td>当前页面 URL</td><td>验证跳转结果</td></tr>
+        <tr><td><code>title</code></td><td>页面标题</td><td>验证页面标题</td></tr>
+        <tr><td><code>attribute</code></td><td>元素属性</td><td>验证 checked、disabled 等</td></tr>
+        <tr><td><code>count</code></td><td>元素数量</td><td>验证列表条目数</td></tr>
+        <tr><td><code>screenshot</code></td><td>截图元数据</td><td>验证截图文件存在/尺寸</td></tr>
+        <tr><td><code>visualDiff</code></td><td>视觉回归比对</td><td>像素级比对截图差异</td></tr>
+      </table>
+
+      <h4>截图与视觉回归</h4>
+      <p>浏览器步骤支持三种截图相关能力：</p>
+      <ul>
+        <li><strong>截图步骤</strong>：执行 <code>screenshot</code> 操作捕获页面截图，支持 fullPage 全页截图或指定 selector 截取元素</li>
+        <li><strong>截图元数据断言（Phase A）</strong>：断言截图的文件存在性、宽度、高度、文件大小</li>
+        <li><strong>OCR 文本提取（Phase B）</strong>：从截图中通过 OCR 识别文字内容，支持中文/英文/中英混合</li>
+        <li><strong>视觉回归比对（Phase C）</strong>：将当前截图与基准图进行像素级比对，生成差异图和差异率统计</li>
+      </ul>
+      <div class="tip">使用 visualDiff 断言前，需先执行 screenshot 步骤获取当前截图，并确保基准图（baseline）已上传至项目。</div>
+
+      <h4>视觉回归比对使用示例</h4>
+      <p>以下示例演示如何对一个页面进行截图，并与基准图进行像素级比对：</p>
+
+      <div class="flow-chart">
+        <div class="flow-chart-label">操作流程</div>
+        <pre class="mermaid">
+graph TD
+    A[添加 navigate 步骤<br/>打开目标页面] --> B[添加 screenshot 步骤<br/>捕获当前页面]
+    B --> C[添加 assert 步骤<br/>选择 visualDiff 类型]
+    C --> D[填写 baseline 路径]
+    D --> E[配置像素阈值和差异率阈值]
+    E --> F[保存用例并执行]
+    F --> G{比对结果}
+    G -->|差异率 ≤ 阈值| H[✅ 断言通过]
+    G -->|差异率 > 阈值| I[❌ 断言失败<br/>查看 Diff 图定位差异]
+        </pre>
+      </div>
+
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>准备基准图（Baseline）</h4>
+            <p>首次使用时需要先创建基准图。可通过以下方式获取：</p>
+            <ul>
+              <li>运行一次仅包含 <code>navigate + screenshot</code> 的用例，从执行结果中下载截图</li>
+              <li>将截图上传至项目的 baseline 目录（<code>.ai-tester-baselines/{projectId}/</code>）</li>
+              <li>记录基准图的完整路径，如 <code>/project/.ai-tester-baselines/xxx/home-baseline.png</code></li>
+            </ul>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>配置截图步骤</h4>
+            <p>在用例中添加 screenshot 步骤：</p>
+            <ul>
+              <li><strong>操作</strong>：选择 <code>screenshot</code></li>
+              <li><strong>fullPage</strong>：勾选以捕获全页截图（推荐用于页面级回归比对）</li>
+              <li><strong>selector</strong>：如需截取特定元素，可填写 CSS 选择器（留空则截取视口）</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>配置 visualDiff 断言</h4>
+            <p>在 screenshot 步骤之后添加 assert 步骤，配置如下：</p>
+            <ul>
+              <li><strong>断言类型</strong>：选择 <code>visualDiff</code></li>
+              <li><strong>基准图路径</strong>：填写 baseline 图片的绝对文件路径</li>
+              <li><strong>像素阈值（threshold）</strong>：0~1，控制像素差异的灵敏度（默认 0.1，越小越严格）</li>
+              <li><strong>差异率阈值（%）</strong>：允许的最大差异率（默认 1.0%，超过则断言失败）</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>执行与查看结果</h4>
+            <p>保存用例后执行套件，在运行详情中查看结果：</p>
+            <ul>
+              <li>通过：差异率为 0% 或低于阈值，截图与基准图一致</li>
+              <li>失败：差异率超过阈值，可在 Browser 标签页查看三图对比（Baseline / Current / Diff）</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="ui-mockup">
+        <div class="ui-mockup-label">visualDiff 断言配置示例</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+          <span style="font-size:11px;color:var(--text-muted);">断言类型：</span>
+          <span class="mock-select">visualDiff</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+          <span style="font-size:11px;color:var(--text-muted);">基准图路径：</span>
+          <span class="mock-input" style="min-width:280px;">/project/.ai-tester-baselines/xxx/home.png</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+          <span style="font-size:11px;color:var(--text-muted);">像素阈值：</span>
+          <span class="mock-input" style="min-width:60px;">0.1</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:12px;">差异率阈值：</span>
+          <span class="mock-input" style="min-width:60px;">1.0</span>
+          <span style="font-size:11px;color:var(--text-muted);">%</span>
+        </div>
+      </div>
+      <div class="note">threshold 是 pixelmatch 的像素差异阈值（0~1），diffPercentageThreshold 是允许的整体差异率上限（%）。两者同时满足时断言才通过。</div>
 
       <h2>通用步骤选项</h2>
       <p>每个步骤都有以下通用选项：</p>
@@ -738,7 +913,7 @@ graph TD
     B --> C[系统创建 TestRun]
     C --> D[依次执行套件中的用例]
     D --> E[每个用例依次执行步骤]
-    E --> F[记录每步的请求/响应/断言/提取]
+    E --> F[记录每步的执行结果]
     F --> G[汇总结果]
     G --> H[查看运行列表]
     H --> I[点击进入运行详情]
@@ -766,9 +941,93 @@ graph TD
         <li><strong>请求</strong>（HTTP 步骤）：完整请求信息（method / url / headers / body）</li>
         <li><strong>响应</strong>（HTTP 步骤）：响应状态码、耗时、响应体</li>
         <li><strong>断言</strong>（断言步骤）：操作符、期望值、实际值、是否通过</li>
+        <li><strong>Browser</strong>（浏览器步骤）：浏览器操作详情、截图、断言结果</li>
         <li><strong>错误</strong>（失败步骤）：错误信息和堆栈</li>
       </ul>
-      <div class="tip">失败用例默认展开步骤详情，方便快速定位问题。</div>
+
+      <h4>浏览器步骤执行结果</h4>
+      <p>Browser 标签页展示浏览器步骤的详细执行信息：</p>
+      <ul>
+        <li><strong>操作信息</strong>：操作类型（navigate/click/screenshot 等）、当前 URL、页面标题</li>
+        <li><strong>断言详情</strong>：断言类型、操作符、期望值、实际值、通过状态</li>
+        <li><strong>截图查看</strong>：点击截图可放大查看，支持再次点击恢复缩略</li>
+        <li><strong>视觉回归比对</strong>：visualDiff 断言会展示三图对比视图
+          <ul>
+            <li><strong>Baseline</strong>：基准图（预期截图）</li>
+            <li><strong>Current</strong>：当前执行截图</li>
+            <li><strong>Diff</strong>：差异图（高亮显示像素差异区域）</li>
+          </ul>
+        </li>
+        <li><strong>差异统计</strong>：差异像素数、差异率百分比</li>
+      </ul>
+      <div class="tip">失败用例默认展开步骤详情，方便快速定位问题。浏览器截图和 diff 图可直接在运行详情中查看，无需下载。</div>
+    </div>
+  </div>
+
+  <!-- ==================== AI 服务商管理 ==================== -->
+  <div class="section" id="sec-ai-providers">
+    <div class="content">
+      <h1 class="section-title">AI 服务商管理</h1>
+      <p class="section-subtitle">管理 LLM 服务提供商配置，支持多个服务商共存。在 AI 设置中选择具体使用的模型时，将从已配置的服务商中读取。</p>
+
+      <h2>业务流程</h2>
+      <div class="flow-chart">
+        <div class="flow-chart-label">业务流程</div>
+        <pre class="mermaid">
+graph LR
+    A[进入服务商管理] --> B[点击新建服务商]
+    B --> C[填写名称和协议]
+    C --> D[配置 Base URL]
+    D --> E[保存服务商]
+    E --> F[在 AI 设置中选择使用]
+        </pre>
+      </div>
+
+      <h2>操作步骤</h2>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>进入服务商管理</h4>
+            <p>点击左侧导航栏「AI 能力」→「AI 服务商管理」，进入服务商列表页。</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>新建服务商</h4>
+            <p>点击「新建服务商」按钮，填写以下信息：</p>
+            <ul>
+              <li><strong>名称</strong>：服务商显示名称（如"OpenAI 官方"、"阿里云百炼"）</li>
+              <li><strong>API 格式协议</strong>：选择服务商使用的 API 格式
+                <ul>
+                  <li><strong>OpenAI</strong>：标准 OpenAI API 格式</li>
+                  <li><strong>Anthropic</strong>：Anthropic Messages API 格式</li>
+                </ul>
+              </li>
+              <li><strong>Base URL</strong>：服务商 API 基础地址（如 <code>https://api.openai.com/v1</code>）</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>保存并管理</h4>
+            <p>保存后可在列表中编辑或删除服务商。每个项目可配置多个服务商，但在 AI 设置中只能选择一个当前生效的服务商。</p>
+          </div>
+        </div>
+      </div>
+
+      <h2>常用服务商配置参考</h2>
+      <table class="mock-table">
+        <tr><th>服务商</th><th>API 格式</th><th>Base URL 示例</th></tr>
+        <tr><td>OpenAI 官方</td><td>OpenAI</td><td><code>https://api.openai.com/v1</code></td></tr>
+        <tr><td>Anthropic 官方</td><td>Anthropic</td><td><code>https://api.anthropic.com/v1</code></td></tr>
+        <tr><td>阿里云百炼</td><td>OpenAI</td><td><code>https://dashscope.aliyuncs.com/compatible-mode/v1</code></td></tr>
+        <tr><td>Azure OpenAI</td><td>OpenAI</td><td><code>https://{resource}.openai.azure.com/openai/deployments/{deployment}</code></td></tr>
+        <tr><td>Ollama 本地</td><td>OpenAI</td><td><code>http://localhost:11434/v1</code></td></tr>
+      </table>
+      <div class="note">Anthropic 格式的 Base URL 必须包含 <code>/v1</code> 路径，SDK 不会自动追加。</div>
     </div>
   </div>
 
@@ -776,15 +1035,15 @@ graph TD
   <div class="section" id="sec-ai-settings">
     <div class="content">
       <h1 class="section-title">AI 设置</h1>
-      <p class="section-subtitle">配置 LLM 服务提供商和 API Key，这是使用 AI 功能（知识解析、用例生成）的前提。</p>
+      <p class="section-subtitle">选择当前项目使用的 LLM 模型，配置模型参数和 API Key。在使用 AI 功能（知识解析、用例生成）前必须完成此配置。</p>
 
       <h2>业务流程</h2>
       <div class="flow-chart">
         <div class="flow-chart-label">业务流程</div>
         <pre class="mermaid">
 graph LR
-    A[进入 AI 设置页] --> B[选择 Provider]
-    B --> C[输入 Model 名称]
+    A[进入 AI 设置页] --> B[选择服务商]
+    B --> C[选择/输入 Model]
     C --> D[输入 API Key]
     D --> E[配置参数]
     E --> F[保存配置]
@@ -800,20 +1059,15 @@ graph LR
         <div class="step-item">
           <div class="step-number">1</div>
           <div class="step-content">
-            <h4>选择 Provider</h4>
-            <p>从下拉菜单选择 LLM 提供商：</p>
-            <ul>
-              <li><strong>OpenAI</strong>：支持 gpt-4o、gpt-4o-mini 等模型</li>
-              <li><strong>Anthropic</strong>：支持 claude-sonnet-4 等模型（预留）</li>
-              <li><strong>Custom</strong>：兼容 OpenAI API 格式的自定义端点（如 Ollama、vLLM）</li>
-            </ul>
+            <h4>选择服务商</h4>
+            <p>从「服务商」下拉菜单选择已配置的服务商。如果列表为空，请先到「AI 服务商管理」页面添加服务商。</p>
           </div>
         </div>
         <div class="step-item">
           <div class="step-number">2</div>
           <div class="step-content">
             <h4>输入 Model 和 API Key</h4>
-            <p>Model 输入框支持预设建议（如 gpt-4o），也可手动输入。API Key 以密码形式输入，保存后加密存储。</p>
+            <p>Model 输入框支持预设建议（如 gpt-4o、claude-sonnet-4），也可手动输入。API Key 以密码形式输入，保存后使用 AES-256-GCM 加密存储。</p>
           </div>
         </div>
         <div class="step-item">
@@ -821,7 +1075,6 @@ graph LR
           <div class="step-content">
             <h4>配置参数（选填）</h4>
             <ul>
-              <li><strong>Base URL</strong>：仅 Custom 模式需要，填写兼容端点地址</li>
               <li><strong>Temperature</strong>：0~2，控制输出随机性（默认 0.7）</li>
               <li><strong>Max Tokens</strong>：100~128000，控制最大输出长度（默认 4096）</li>
             </ul>
@@ -831,7 +1084,7 @@ graph LR
           <div class="step-number">4</div>
           <div class="step-content">
             <h4>保存并测试</h4>
-            <p>点击「保存」后，可点击「测试连接」按钮验证 LLM 服务是否可用。连接成功后即可使用 AI 知识解析和用例生成功能。</p>
+            <p>点击「保存」后，可点击「测试连接」按钮验证 LLM 服务是否可用。连接成功后将显示绿色提示，此时即可使用 AI 知识解析和用例生成功能。</p>
           </div>
         </div>
       </div>

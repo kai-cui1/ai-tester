@@ -1,6 +1,6 @@
 import type { StepForm } from "@/components/step-editor";
 import {
-  Globe, ShieldCheck, Download, GitBranch, Database,
+  Globe, ShieldCheck, Download, GitBranch, Database, AppWindow,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,6 +17,7 @@ export const STEP_TYPE_STYLES: Record<StepForm["type"], StepTypeStyle> = {
   extract:        { icon: Download,    color: "bg-violet-500",  border: "border-l-violet-500",  label: "extract" },
   call:           { icon: GitBranch,   color: "bg-amber-500",   border: "border-l-amber-500",   label: "call" },
   "load-dataset": { icon: Database,    color: "bg-cyan-500",    border: "border-l-cyan-500",    label: "load-dataset" },
+  browser:        { icon: AppWindow,   color: "bg-orange-500",  border: "border-l-orange-500",  label: "browser" },
 };
 
 /**
@@ -41,6 +42,8 @@ export function getStepSummary(step: StepForm): string {
       return c.testCaseId ? `ID: ${c.testCaseId.slice(0, 8)}...` : "";
     case "load-dataset":
       return c.datasetId ? `ID: ${c.datasetId.slice(0, 8)}...` : "";
+    case "browser":
+      return c.action ? `${c.action}${c.url ? " " + c.url : c.selector ? " " + c.selector : ""}` : "";
     default:
       return "";
   }

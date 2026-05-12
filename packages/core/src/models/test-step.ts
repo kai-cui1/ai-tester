@@ -88,9 +88,11 @@ export const BrowserAssertionType = z.enum([
   'title',
   'attribute',
   'count',
+  'screenshot',
+  'visualDiff',
 ]);
 
-export const BrowserAssertionOperator = z.enum(['equals', 'contains', 'matches']);
+export const BrowserAssertionOperator = z.enum(['equals', 'contains', 'matches', 'gt', 'gte', 'lt', 'lte']);
 
 export const BrowserAssertionSchema = z.object({
   type: BrowserAssertionType,
@@ -98,6 +100,11 @@ export const BrowserAssertionSchema = z.object({
   expected: z.any().optional(),
   operator: BrowserAssertionOperator.default('equals'),
   attribute: z.string().optional(),
+  // screenshot assertion: which property to check
+  property: z.enum(['fileExists', 'width', 'height', 'size']).optional(),
+  // visualDiff assertion: baseline image path and threshold
+  baselinePath: z.string().optional(),
+  threshold: z.number().min(0).max(1).default(0.1).optional(),
 });
 
 export const BrowserStepConfigSchema = z.object({
@@ -123,6 +130,8 @@ export const BrowserStepConfigSchema = z.object({
   // extract options
   variableName: z.string().optional(),
   attribute: z.string().optional(),
+  source: z.enum(['dom', 'screenshot']).default('dom').optional(),
+  lang: z.enum(['eng', 'chi_sim', 'chi_sim+eng']).default('chi_sim+eng').optional(),
   // assert
   assertion: BrowserAssertionSchema.optional(),
   // keyboard

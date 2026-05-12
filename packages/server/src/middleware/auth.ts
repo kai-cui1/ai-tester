@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 
-const PUBLIC_PATHS = ['/api/v1/health'];
+const PUBLIC_PATHS = ['/api/v1/health', '/api/v1/screenshots/', '/api/v1/baselines/'];
 
 export function registerAuthHook(app: FastifyInstance) {
   const apiKey = process.env.API_KEY;
@@ -11,8 +11,8 @@ export function registerAuthHook(app: FastifyInstance) {
   }
 
   app.addHook('onRequest', async (request, reply) => {
-    // Skip public paths
-    if (PUBLIC_PATHS.includes(request.url)) {
+    // Skip public paths (exact match or prefix match)
+    if (PUBLIC_PATHS.some((path) => request.url === path || request.url.startsWith(path))) {
       return;
     }
 

@@ -231,24 +231,64 @@ function StepResultRow({ step }: { step: TestStepResult }) {
                         <p>实际值: <span className="font-mono">{JSON.stringify(step.browser.assertion.actual)}</span></p>
                       )}
                       <p>结果: {step.browser.assertion.passed ? <Badge variant="success">通过</Badge> : <Badge variant="destructive">失败</Badge>}</p>
+                      {/* Visual diff details */}
+                      {(step.browser.assertion as any).diffCount !== undefined && (
+                        <>
+                          <p>差异像素: <span className="font-mono">{(step.browser.assertion as any).diffCount}</span></p>
+                          <p>差异率: <span className="font-mono">{(step.browser.assertion as any).diffPercentage?.toFixed(4)}%</span></p>
+                        </>
+                      )}
                     </div>
                   )}
                   {step.browser.screenshot && (
                     <div className="space-y-1">
-                      <p className="font-medium flex items-center gap-1"><Camera className="h-3 w-3" />截图</p>
+                      <p className="font-medium flex items-center gap-1"><Camera className="h-3 w-3" />当前截图</p>
                       <img
                         src={`/api/v1/screenshots/${step.browser.screenshot.split("/").slice(-2).join("/")}`}
                         alt="Step screenshot"
                         className="max-w-full rounded border cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={(e) => {
                           const img = e.currentTarget;
-                          if (img.style.maxWidth === "none") {
-                            img.style.maxWidth = "";
-                          } else {
-                            img.style.maxWidth = "none";
-                          }
+                          if (img.style.maxWidth === "none") { img.style.maxWidth = ""; } else { img.style.maxWidth = "none"; }
                         }}
                       />
+                    </div>
+                  )}
+                  {/* Visual diff image comparison */}
+                  {(step.browser.assertion as any)?.diffImage && (
+                    <div className="space-y-3">
+                      <p className="font-medium">视觉回归比对</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* Baseline */}
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Baseline（基准图）</p>
+                          <img
+                            src={`/api/v1/baselines/${(step.browser.assertion as any).baselinePath?.split("/").slice(-2).join("/")}`}
+                            alt="Baseline"
+                            className="max-w-full rounded border"
+                          />
+                        </div>
+                        {/* Current */}
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Current（当前截图）</p>
+                          {step.browser.screenshot && (
+                            <img
+                              src={`/api/v1/screenshots/${step.browser.screenshot.split("/").slice(-2).join("/")}`}
+                              alt="Current"
+                              className="max-w-full rounded border"
+                            />
+                          )}
+                        </div>
+                        {/* Diff */}
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Diff（差异图）</p>
+                          <img
+                            src={`/api/v1/screenshots/${(step.browser.assertion as any).diffImage.split("/").slice(-2).join("/")}`}
+                            alt="Diff"
+                            className="max-w-full rounded border"
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -96,11 +96,12 @@ export function PipelineNode({ index, step, total, projectId, onChange, onRemove
                   extract: { source: "jsonpath", expression: "", variableName: "" },
                   call: { testCaseId: "" },
                   "load-dataset": { datasetId: "", variableName: "" },
+                  browser: { action: "navigate", url: "", timeout: 30000 },
                 };
                 onChange({ type: v, config: configs[v] || {} });
               }}
             >
-              {(["http", "assertion", "extract", "call", "load-dataset"] as const).map((k) => (
+              {(["http", "assertion", "extract", "call", "load-dataset", "browser"] as const).map((k) => (
                 <option key={k} value={k}>{t(`testCases.stepType.${k}`)}</option>
               ))}
             </select>

@@ -14,8 +14,11 @@ const BROWSER_ACTIONS = [
   "goBack", "goForward", "close",
 ] as const;
 
-const ASSERTION_TYPES = ["text", "value", "visible", "hidden", "url", "title", "attribute", "count"] as const;
-const ASSERTION_OPERATORS = ["equals", "contains", "matches"] as const;
+const ASSERTION_TYPES = ["text", "value", "visible", "hidden", "url", "title", "attribute", "count", "screenshot", "visualDiff"] as const;
+const ASSERTION_OPERATORS = ["equals", "contains", "matches", "gt", "gte", "lt", "lte"] as const;
+const SCREENSHOT_PROPERTIES = ["fileExists", "width", "height", "size"] as const;
+const EXTRACT_SOURCES = ["dom", "screenshot"] as const;
+const OCR_LANGUAGES = ["eng", "chi_sim", "chi_sim+eng"] as const;
 const WAIT_UNTIL_OPTIONS = ["load", "domcontentloaded", "networkidle"] as const;
 const ELEMENT_STATES = ["visible", "hidden", "attached", "detached"] as const;
 const MOUSE_BUTTONS = ["left", "right", "middle"] as const;
@@ -246,25 +249,86 @@ export function BrowserStepEditor({ config, onChange }: BrowserStepEditorProps) 
 
       {/* Extract options */}
       {needsExtractOptions && (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.variableNameLabel")}</Label>
-            <Input
-              className="h-8"
-              value={config.variableName || ""}
-              onChange={(e) => onChange({ variableName: e.target.value })}
-              placeholder={t("testCases.browserConfig.variableNamePlaceholder")}
-            />
+        <div className="space-y-2">
+          {/* Source selector */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.extractSourceLabel")}</Label>
+              <Select
+                value={config.source || "dom"}
+                onValueChange={(v) => {
+                  const patch: Record<string, any> = { source: v };
+                  if (v === "screenshot") {
+                    patch.selector = undefined;
+                    patch.attribute = undefined;
+                    patch.lang = "chi_sim+eng";
+                  } else {
+                    patch.lang = undefined;
+                    patch.selector = "";
+                  }
+                  onChange(patch);
+                }}
+              >
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {EXTRACT_SOURCES.map((s) => (
+                    <SelectItem key={s} value={s}>{t(`testCases.browserConfig.extractSource.${s}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.variableNameLabel")}</Label>
+              <Input
+                className="h-8"
+                value={config.variableName || ""}
+                onChange={(e) => onChange({ variableName: e.target.value })}
+                placeholder={t("testCases.browserConfig.variableNamePlaceholder")}
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.attributeLabel")}</Label>
-            <Input
-              className="h-8"
-              value={config.attribute || ""}
-              onChange={(e) => onChange({ attribute: e.target.value || undefined })}
-              placeholder={t("testCases.browserConfig.attributePlaceholder")}
-            />
-          </div>
+          {/* DOM source: selector + attribute */}
+          {config.source !== "screenshot" && (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.selectorLabel")}</Label>
+                <Input
+                  className="h-8"
+                  value={config.selector || ""}
+                  onChange={(e) => onChange({ selector: e.target.value })}
+                  placeholder={t("testCases.browserConfig.selectorPlaceholder")}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.attributeLabel")}</Label>
+                <Input
+                  className="h-8"
+                  value={config.attribute || ""}
+                  onChange={(e) => onChange({ attribute: e.target.value || undefined })}
+                  placeholder={t("testCases.browserConfig.attributePlaceholder")}
+                />
+              </div>
+            </div>
+          )}
+          {/* Screenshot source: OCR language */}
+          {config.source === "screenshot" && (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.ocrLangLabel")}</Label>
+                <Select
+                  value={config.lang || "chi_sim+eng"}
+                  onValueChange={(v) => onChange({ lang: v })}
+                >
+                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {OCR_LANGUAGES.map((l) => (
+                      <SelectItem key={l} value={l}>{t(`testCases.browserConfig.ocrLang.${l}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -325,8 +389,64 @@ export function BrowserStepEditor({ config, onChange }: BrowserStepEditorProps) 
               />
             </div>
           )}
+          {/* Screenshot property selector for screenshot assertion */}
+          {config.assertion?.type === "screenshot" && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.screenshotPropertyLabel")}</Label>
+              <Select
+                value={config.assertion?.property || "fileExists"}
+                onValueChange={(v) => onChange({ assertion: { ...config.assertion, property: v, expected: v === "fileExists" ? true : config.assertion?.expected } })}
+              >
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SCREENSHOT_PROPERTIES.map((sp) => (
+                    <SelectItem key={sp} value={sp}>{t(`testCases.browserConfig.screenshotProperty.${sp}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {/* Visual diff baseline path and threshold */}
+          {config.assertion?.type === "visualDiff" && (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.baselinePathLabel")}</Label>
+                <Input
+                  className="h-8"
+                  value={config.assertion?.baselinePath || ""}
+                  onChange={(e) => onChange({ assertion: { ...config.assertion, baselinePath: e.target.value } })}
+                  placeholder={t("testCases.browserConfig.baselinePathPlaceholder")}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.thresholdLabel")}</Label>
+                  <Input
+                    type="number"
+                    className="h-8"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={config.assertion?.threshold ?? 0.1}
+                    onChange={(e) => onChange({ assertion: { ...config.assertion, threshold: Number(e.target.value) } })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.diffPercentageThresholdLabel")}</Label>
+                  <Input
+                    type="number"
+                    className="h-8"
+                    min={0}
+                    step={0.1}
+                    value={config.assertion?.expected ?? 1.0}
+                    onChange={(e) => onChange({ assertion: { ...config.assertion, expected: Number(e.target.value) } })}
+                  />
+                </div>
+              </div>
+            </>
+          )}
           {/* Expected value for non-boolean assertions */}
-          {!["visible", "hidden"].includes(config.assertion?.type) && (
+          {!["visible", "hidden"].includes(config.assertion?.type) && !(config.assertion?.type === "screenshot" && config.assertion?.property === "fileExists") && !(config.assertion?.type === "visualDiff") && (
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.expectedLabel")}</Label>
               <Input

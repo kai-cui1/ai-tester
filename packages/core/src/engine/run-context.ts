@@ -8,6 +8,13 @@ export interface HttpResponse {
   responseTimeMs: number;
 }
 
+export interface ScreenshotMeta {
+  path: string;
+  width: number;
+  height: number;
+  size: number;
+}
+
 export class RunContext {
   public readonly runId: string;
   public readonly environment: Environment;
@@ -17,6 +24,7 @@ export class RunContext {
   // Browser testing context (shared within a test case)
   public browserPage?: any; // Playwright Page object
   public screenshots: string[] = [];
+  public lastScreenshot?: ScreenshotMeta;
 
   constructor(
     runId: string,

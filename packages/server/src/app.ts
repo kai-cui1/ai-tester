@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import path from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import Fastify from 'fastify';
@@ -22,6 +23,7 @@ import { aiModelRoutes } from './routes/ai-models.js';
 import { aiProviderConfigRoutes } from './routes/ai-provider-configs.js';
 import { aiEndpointRoutes } from './routes/ai-endpoints.js';
 import { aiGenerationRoutes } from './routes/ai-generation.js';
+import { baselineRoutes } from './routes/baselines.js';
 import { registerAuthHook } from './middleware/auth.js';
 
 export async function buildApp() {
@@ -87,6 +89,18 @@ export async function buildApp() {
   await app.register(aiProviderConfigRoutes);
   await app.register(aiEndpointRoutes);
   await app.register(aiGenerationRoutes);
+  await app.register(baselineRoutes);
+
+  // Baseline static file serving (project root, same as where baseline routes write)
+  const baselineBaseDir = path.join(__dirname, '../../../.ai-tester-baselines');
+  if (!existsSync(baselineBaseDir)) {
+    mkdirSync(baselineBaseDir, { recursive: true });
+  }
+  await app.register(staticPlugin, {
+    root: baselineBaseDir,
+    prefix: '/api/v1/baselines/',
+    decorateReply: false,
+  });
 
   return app;
 }
