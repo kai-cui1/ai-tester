@@ -332,6 +332,25 @@ export const endpoints = {
     }),
 };
 
+/* ── Baselines ── */
+export interface BaselineImage {
+  name: string;
+  path: string;
+  size: number;
+  updatedAt: string;
+}
+
+export const baselines = {
+  list: (projectId: string) => request<BaselineImage[]>(`/projects/${projectId}/baselines`),
+  upload: (projectId: string, name: string, data: string) =>
+    request<{ name: string; path: string; size: number }>(`/projects/${projectId}/baselines`, {
+      method: "POST",
+      body: JSON.stringify({ name, data }),
+    }),
+  delete: (projectId: string, name: string) =>
+    request<void>(`/projects/${projectId}/baselines/${name}`, { method: "DELETE" }),
+};
+
 /* ── AI Generation ── */
 export interface GeneratedStepPreview {
   name: string;

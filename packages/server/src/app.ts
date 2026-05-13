@@ -91,8 +91,8 @@ export async function buildApp() {
   await app.register(aiGenerationRoutes);
   await app.register(baselineRoutes);
 
-  // Baseline static file serving (project root, same as where baseline routes write)
-  const baselineBaseDir = path.join(__dirname, '../../../.ai-tester-baselines');
+  // Baseline static file serving (same directory as baselines.ts writes to)
+  const baselineBaseDir = path.join(__dirname, '../../.ai-tester-baselines');
   if (!existsSync(baselineBaseDir)) {
     mkdirSync(baselineBaseDir, { recursive: true });
   }

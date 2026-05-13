@@ -1,10 +1,13 @@
 import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { baselines, type BaselineImage } from "@/lib/api";
+import { useProject } from "@/lib/project-context";
 
 /* ── Constants ── */
 
@@ -40,7 +43,16 @@ export interface BrowserStepEditorProps {
 
 export function BrowserStepEditor({ config, onChange }: BrowserStepEditorProps) {
   const { t } = useTranslation();
+  const { current: project } = useProject();
+  const [baselineList, setBaselineList] = useState<BaselineImage[]>([]);
   const action = config.action || "navigate";
+
+  // Load baseline images for visualDiff selection
+  useEffect(() => {
+    if (project && config.assertion?.type === "visualDiff") {
+      baselines.list(project.id).then(setBaselineList).catch(() => setBaselineList([]));
+    }
+  }, [project, config.assertion?.type]);
 
   // Which fields to show based on action
   const needsUrl = action === "navigate";
@@ -433,12 +445,30 @@ export function BrowserStepEditor({ config, onChange }: BrowserStepEditorProps) 
             <>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">{t("testCases.browserConfig.baselinePathLabel")}</Label>
-                <Input
-                  className="h-8"
-                  value={config.assertion?.baselinePath || ""}
-                  onChange={(e) => onChange({ assertion: { ...config.assertion, baselinePath: e.target.value } })}
-                  placeholder={t("testCases.browserConfig.baselinePathPlaceholder")}
-                />
+                {baselineList.length > 0 ? (
+                  <Select
+                    value={config.assertion?.baselinePath || ""}
+                    onValueChange={(val) => onChange({ assertion: { ...config.assertion, baselinePath: val } })}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder={t("baselines.selectBaseline")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {baselineList.map((b) => (
+                        <SelectItem key={b.name} value={b.path}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    className="h-8"
+                    value={config.assertion?.baselinePath || ""}
+                    onChange={(e) => onChange({ assertion: { ...config.assertion, baselinePath: e.target.value } })}
+                    placeholder={t("baselines.noBaselines")}
+                  />
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">

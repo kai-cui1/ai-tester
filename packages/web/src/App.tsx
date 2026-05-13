@@ -9,6 +9,7 @@ import { SuitesPage } from "@/pages/suites";
 import { RunsPage } from "@/pages/runs";
 import { RunDetailPage } from "@/pages/run-detail";
 import { DatasetsPage } from "@/pages/datasets";
+import { BaselinesPage } from "@/pages/baselines";
 import { AiSettingsPage } from "@/pages/ai-settings";
 import { AiProvidersPage } from "@/pages/ai-providers";
 import { KnowledgePage } from "@/pages/knowledge";
@@ -27,6 +28,7 @@ export function App() {
             <Route path="/runs" element={<RunsPage />} />
             <Route path="/runs/:id" element={<RunDetailPage />} />
             <Route path="/datasets" element={<DatasetsPage />} />
+            <Route path="/baselines" element={<BaselinesPage />} />
             <Route path="/ai/settings" element={<AiSettingsPage />} />
             <Route path="/ai/providers" element={<AiProvidersPage />} />
             <Route path="/ai/knowledge" element={<KnowledgePage />} />

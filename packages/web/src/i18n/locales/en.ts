@@ -33,6 +33,7 @@ const en = {
       suites: "Suites",
       runs: "Runs",
       datasets: "Datasets",
+      baselines: "Baselines",
       aiProviders: "Model Services",
       aiSettings: "Model Config",
       knowledge: "Knowledge Base",
@@ -106,6 +107,25 @@ const en = {
     variableValue: "Value",
     removeVariable: "Remove",
     noEnvironments: "No environments configured",
+  },
+
+  /* ── Baselines ── */
+  baselines: {
+    title: "Baseline Images",
+    subtitle: "Manage baseline images for visual regression testing",
+    upload: "Upload Baseline",
+    uploadHint: "Drag & drop a PNG image here, or click to select",
+    empty: "No baseline images",
+    uploadFirst: "Upload your first baseline",
+    confirmDelete: "Delete this baseline? Associated visualDiff assertions will fail.",
+    name: "Filename",
+    size: "Size",
+    updatedAt: "Updated",
+    preview: "Preview",
+    deleteSuccess: "Baseline deleted",
+    uploadSuccess: "Baseline uploaded",
+    selectBaseline: "Select Baseline",
+    noBaselines: "No baselines available. Upload one in the Baselines page first.",
   },
 
   /* ── Test Cases ── */

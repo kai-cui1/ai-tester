@@ -33,6 +33,7 @@ const zhCN = {
       suites: "测试套件",
       runs: "运行中心",
       datasets: "数据集",
+      baselines: "基准图",
       aiProviders: "模型服务",
       aiSettings: "模型配置",
       knowledge: "知识库",
@@ -106,6 +107,25 @@ const zhCN = {
     variableValue: "值",
     removeVariable: "删除",
     noEnvironments: "暂无环境配置",
+  },
+
+  /* ── Baselines ── */
+  baselines: {
+    title: "基准图管理",
+    subtitle: "管理视觉回归比对的基准图",
+    upload: "上传基准图",
+    uploadHint: "拖拽 PNG 图片到此处，或点击选择文件",
+    empty: "暂无基准图",
+    uploadFirst: "上传第一张基准图",
+    confirmDelete: "确定删除此基准图？关联的 visualDiff 断言将失败。",
+    name: "文件名",
+    size: "大小",
+    updatedAt: "更新时间",
+    preview: "预览",
+    deleteSuccess: "基准图已删除",
+    uploadSuccess: "基准图已上传",
+    selectBaseline: "选择基准图",
+    noBaselines: "暂无基准图，请先在基准图管理页面上传",
   },
 
   /* ── Test Cases ── */

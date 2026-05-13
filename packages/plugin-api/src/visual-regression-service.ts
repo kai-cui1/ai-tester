@@ -30,15 +30,14 @@ export class VisualRegressionService {
     ]);
 
     const baseline = PNG.sync.read(baselineBuf);
-    const current = PNG.sync.read(currentBuf);
+    const currentRaw = PNG.sync.read(currentBuf);
+    let current: PNG;
 
-    // Size mismatch: fail immediately
-    if (baseline.width !== current.width || baseline.height !== current.height) {
-      return {
-        diffCount: -1,
-        diffPercentage: 100,
-        passed: false,
-      };
+    // Size mismatch: resize current image to baseline dimensions for comparison
+    if (baseline.width !== currentRaw.width || baseline.height !== currentRaw.height) {
+      current = this.resizePng(currentRaw, baseline.width, baseline.height);
+    } else {
+      current = currentRaw;
     }
 
     const { width, height } = baseline;
@@ -60,5 +59,31 @@ export class VisualRegressionService {
     await fs.writeFile(diffImagePath, PNG.sync.write(diff));
 
     return { diffCount, diffPercentage, passed, diffImagePath };
+  }
+
+  /**
+   * Resize a PNG image to target dimensions using nearest-neighbor interpolation.
+   * Used when baseline and current screenshot have different sizes.
+   */
+  private resizePng(src: PNG, targetWidth: number, targetHeight: number): PNG {
+    const dst = new PNG({ width: targetWidth, height: targetHeight });
+    const srcW = src.width;
+    const srcH = src.height;
+    const channels = 4; // RGBA
+
+    for (let y = 0; y < targetHeight; y++) {
+      const srcY = Math.min(Math.floor(y * srcH / targetHeight), srcH - 1);
+      for (let x = 0; x < targetWidth; x++) {
+        const srcX = Math.min(Math.floor(x * srcW / targetWidth), srcW - 1);
+        const srcIdx = (srcY * srcW + srcX) * channels;
+        const dstIdx = (y * targetWidth + x) * channels;
+        dst.data[dstIdx] = src.data[srcIdx];         // R
+        dst.data[dstIdx + 1] = src.data[srcIdx + 1]; // G
+        dst.data[dstIdx + 2] = src.data[srcIdx + 2]; // B
+        dst.data[dstIdx + 3] = src.data[srcIdx + 3]; // A
+      }
+    }
+
+    return dst;
   }
 }
