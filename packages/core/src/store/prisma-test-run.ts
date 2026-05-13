@@ -52,6 +52,7 @@ function toStepResult(row: any): TestStepResult {
     stepName: row.stepName,
     stepType: row.stepType as TestStepResult['stepType'],
     status: row.status as TestStepResult['status'],
+    order: row.order ?? 0,
     request: row.request ? JSON.parse(row.request) : undefined,
     response: row.response ? JSON.parse(row.response) : undefined,
     assertion: row.assertion ? JSON.parse(row.assertion) : undefined,
@@ -81,7 +82,7 @@ export class PrismaTestRunRepository implements TestRunRepository {
       where: { id },
       include: {
         caseResults: {
-          include: { stepResults: { orderBy: { stepId: 'asc' } } },
+          include: { stepResults: { orderBy: { order: 'asc' } } },
           orderBy: { startedAt: 'asc' },
         },
       },
@@ -179,6 +180,7 @@ export class PrismaTestRunRepository implements TestRunRepository {
         stepName: stepResult.stepName,
         stepType: stepResult.stepType,
         status: stepResult.status,
+        order: stepResult.order ?? 0,
         request: stepResult.request ? JSON.stringify(stepResult.request) : null,
         response: stepResult.response ? JSON.stringify(stepResult.response) : null,
         assertion: stepResult.assertion ? JSON.stringify(stepResult.assertion) : null,

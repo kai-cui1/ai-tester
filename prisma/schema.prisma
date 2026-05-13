@@ -112,6 +112,7 @@ model TestStepResult {
   stepName     String
   stepType     String
   status       String  @default("skipped")
+  order        Int     @default(0)
   request      String? // JSON
   response     String? // JSON
   assertion    String? // JSON

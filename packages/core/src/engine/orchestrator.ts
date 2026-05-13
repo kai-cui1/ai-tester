@@ -161,7 +161,8 @@ export class Orchestrator {
     const results: TestStepResult[] = [];
     let aborted = false;
 
-    for (const step of sortedSteps) {
+    for (let stepIdx = 0; stepIdx < sortedSteps.length; stepIdx++) {
+      const step = sortedSteps[stepIdx];
       if (aborted) {
         results.push({
           id: generateId(),
@@ -170,6 +171,7 @@ export class Orchestrator {
           stepName: step.name,
           stepType: step.type,
           status: 'skipped',
+          order: stepIdx,
           durationMs: 0,
         });
         continue;
@@ -189,6 +191,7 @@ export class Orchestrator {
             stepName: step.name,
             stepType: step.type,
             status: hasFailed ? 'failed' : 'passed',
+            order: stepIdx,
             durationMs: Date.now() - startTime,
           });
           if (hasFailed && !step.continueOnFailure) aborted = true;
@@ -200,6 +203,7 @@ export class Orchestrator {
             stepName: step.name,
             stepType: step.type,
             status: 'error',
+            order: stepIdx,
             error: { message: err.message, stack: err.stack },
             durationMs: Date.now() - startTime,
           });
@@ -223,6 +227,7 @@ export class Orchestrator {
             stepName: step.name,
             stepType: step.type,
             status: 'passed',
+            order: stepIdx,
             extractedVar: { variableName: config.variableName, value: `[${dataset.rows.length} rows]` },
             durationMs: Date.now() - startTime,
           });
@@ -234,6 +239,7 @@ export class Orchestrator {
             stepName: step.name,
             stepType: step.type,
             status: 'error',
+            order: stepIdx,
             error: { message: err.message, stack: err.stack },
             durationMs: Date.now() - startTime,
           });
@@ -278,6 +284,7 @@ export class Orchestrator {
         stepName: step.name,
         stepType: step.type,
         status: lastResult!.status,
+        order: stepIdx,
         request: lastResult!.request,
         response: lastResult!.response,
         assertion: lastResult!.assertion,

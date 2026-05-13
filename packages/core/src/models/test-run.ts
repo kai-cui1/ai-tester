@@ -13,6 +13,7 @@ export const TestStepResultSchema = z.object({
   stepName: z.string(),
   stepType: StepType,
   status: StepResultStatus,
+  order: z.number().int().min(0).default(0),
   // HTTP step specific
   request: z
     .object({

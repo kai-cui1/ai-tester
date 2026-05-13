@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { runs, type TestRun, type TestCaseResult, type TestStepResult } from "@/lib/api";
 import { ArrowLeft, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronRight, Globe, Camera } from "lucide-react";
+import { Lightbox } from "@/components/ui/lightbox";
 
 export function RunDetailPage() {
   const { t, i18n } = useTranslation();
@@ -248,15 +249,16 @@ function StepResultRow({ step }: { step: TestStepResult }) {
                   {step.browser.screenshot && (
                     <div className="space-y-1">
                       <p className="font-medium flex items-center gap-1"><Camera className="h-3 w-3" />当前截图</p>
-                      <img
+                      <Lightbox
                         src={`/api/v1/screenshots/${step.browser.screenshot.split("/").slice(-2).join("/")}`}
                         alt="Step screenshot"
-                        className="max-w-full rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={(e) => {
-                          const img = e.currentTarget;
-                          if (img.style.maxWidth === "none") { img.style.maxWidth = ""; } else { img.style.maxWidth = "none"; }
-                        }}
-                      />
+                      >
+                        <img
+                          src={`/api/v1/screenshots/${step.browser.screenshot.split("/").slice(-2).join("/")}`}
+                          alt="Step screenshot"
+                          className="max-w-full rounded border"
+                        />
+                      </Lightbox>
                     </div>
                   )}
                   {/* Visual diff image comparison */}
@@ -267,31 +269,46 @@ function StepResultRow({ step }: { step: TestStepResult }) {
                         {/* Baseline */}
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">Baseline（基准图）</p>
-                          <img
+                          <Lightbox
                             src={`/api/v1/baselines/${(step.browser.assertion as any).baselinePath?.split("/").slice(-2).join("/")}`}
                             alt="Baseline"
-                            className="max-w-full rounded border"
-                          />
+                          >
+                            <img
+                              src={`/api/v1/baselines/${(step.browser.assertion as any).baselinePath?.split("/").slice(-2).join("/")}`}
+                              alt="Baseline"
+                              className="max-w-full rounded border"
+                            />
+                          </Lightbox>
                         </div>
                         {/* Current */}
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">Current（当前截图）</p>
                           {step.browser.screenshot && (
-                            <img
+                            <Lightbox
                               src={`/api/v1/screenshots/${step.browser.screenshot.split("/").slice(-2).join("/")}`}
                               alt="Current"
-                              className="max-w-full rounded border"
-                            />
+                            >
+                              <img
+                                src={`/api/v1/screenshots/${step.browser.screenshot.split("/").slice(-2).join("/")}`}
+                                alt="Current"
+                                className="max-w-full rounded border"
+                              />
+                            </Lightbox>
                           )}
                         </div>
                         {/* Diff */}
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">Diff（差异图）</p>
-                          <img
+                          <Lightbox
                             src={`/api/v1/screenshots/${(step.browser.assertion as any).diffImage.split("/").slice(-2).join("/")}`}
                             alt="Diff"
-                            className="max-w-full rounded border"
-                          />
+                          >
+                            <img
+                              src={`/api/v1/screenshots/${(step.browser.assertion as any).diffImage.split("/").slice(-2).join("/")}`}
+                              alt="Diff"
+                              className="max-w-full rounded border"
+                            />
+                          </Lightbox>
                         </div>
                       </div>
                     </div>

@@ -468,6 +468,7 @@ export class BrowserExecutor implements Executor {
         return {
           action: 'assert',
           passed,
+          screenshot: meta.path,
           assertion: {
             type: assertion.type,
             operator: 'lte',

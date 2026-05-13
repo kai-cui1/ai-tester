@@ -41,24 +41,77 @@ export class VisualRegressionService {
     }
 
     const { width, height } = baseline;
-    const diff = new PNG({ width, height });
+    const rawDiff = new PNG({ width, height });
     const diffCount = pixelmatch(
       baseline.data,
       current.data,
-      diff.data,
+      rawDiff.data,
       width,
       height,
-      { threshold: options.threshold ?? 0.1 },
+      { threshold: options.threshold ?? 0.1, diffMask: true },
     );
 
     const totalPixels = width * height;
     const diffPercentage = (diffCount / totalPixels) * 100;
     const passed = diffPercentage <= (options.diffPercentageThreshold ?? 1.0);
 
+    // Generate a human-readable diff image:
+    // Use the current screenshot as background, overlay red highlight on diff pixels,
+    // and slightly dim matching regions so the differences stand out.
+    const diff = this.createReadableDiff(current, rawDiff, diffCount, width, height);
+
     const diffImagePath = path.join(options.outputDir, `diff-${Date.now()}.png`);
     await fs.writeFile(diffImagePath, PNG.sync.write(diff));
 
     return { diffCount, diffPercentage, passed, diffImagePath };
+  }
+
+  /**
+   * Create a human-readable diff image.
+   * Uses the current screenshot as background, dims matching regions (40% opacity),
+   * and highlights diff pixels in red. This allows humans to see WHERE differences
+   * occur in the context of the actual page.
+   */
+  private createReadableDiff(
+    current: PNG,
+    rawDiff: PNG,
+    diffCount: number,
+    width: number,
+    height: number,
+  ): PNG {
+    const diff = new PNG({ width, height });
+    const channels = 4; // RGBA
+    const dimAlpha = 0.4; // dim matching regions to 40% opacity
+
+    // If no differences, just return the current screenshot as-is
+    if (diffCount === 0) {
+      diff.data.set(current.data);
+      return diff;
+    }
+
+    for (let i = 0; i < width * height; i++) {
+      const idx = i * channels;
+      // With diffMask: true, pixelmatch outputs:
+      //   - matching pixels: alpha = 0 (transparent)
+      //   - differing pixels: alpha > 0 (opaque)
+      const isDiffPixel = rawDiff.data[idx + 3] > 0;
+
+      if (isDiffPixel) {
+        // Highlight diff pixel in bright red
+        diff.data[idx] = 255;     // R
+        diff.data[idx + 1] = 0;   // G
+        diff.data[idx + 2] = 0;   // B
+        diff.data[idx + 3] = 255; // A
+      } else {
+        // Dim matching regions: blend current pixel with a dark background
+        diff.data[idx] = Math.round(current.data[idx] * dimAlpha);
+        diff.data[idx + 1] = Math.round(current.data[idx + 1] * dimAlpha);
+        diff.data[idx + 2] = Math.round(current.data[idx + 2] * dimAlpha);
+        diff.data[idx + 3] = 255;
+      }
+    }
+
+    return diff;
   }
 
   /**
